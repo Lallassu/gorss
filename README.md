@@ -1,7 +1,8 @@
 # GORSS - Go RSS Reader
 
 ## About
-Simple RSS reader written in Golang. Highly configurable and with themes.
+Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
+
 ![Overview](preview.png)
 
 [Screenshots](#screenshots)
@@ -13,6 +14,7 @@ Any error will be written to `gorss.log`. Note that it also logs key-presses to 
 easily spot what keys you might want to bind in `gorss.conf`.
 
 ## Features
+- RSS and Atom support (via github.com/mmcdole/gofeed)
 - Highlights for configurable words
 - Keyboard shortcuts highly configurable
 - Custom keys for custom execution of external applications
