@@ -19,6 +19,7 @@ type Config struct {
 	ArticlePreviewWindowSizeRatio int       `json:"articlePreviewWindowSizeRatio"`
 	SecondsBetweenUpdates         int       `json:"secondsBetweenUpdates"`
 	DaysToKeepDeletedArticlesInDB int       `json:"daysToKeepDeletedArticlesInDB"`
+	DaysToKeepReadArticlesInDB    int       `json:"daysToKeepReadArticlesInDB"`
 	SkipPreviewInTab              bool      `json:"skipPreviewInTab"`
 	KeyOpenLink                   string    `json:"keyOpenLink"`
 	KeyMarkLink                   string    `json:"keyMarkLink"`

@@ -21,6 +21,7 @@ func (r *RSS) Init(c *Controller) {
 		doc, err := opml.NewOPMLFromFile(r.c.conf.OPMLFile)
 		if err != nil {
 			log.Printf("Failed to load OPML file, %v", err)
+			return
 		}
 
 		// Add URLs to the list of feeds

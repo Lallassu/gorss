@@ -239,7 +239,7 @@ func (c *Controller) ShowFeeds() {
 	}
 
 	c.win.AddToFeeds("Unread", urTotal, urTotal, &Article{feed: "unread"})
-	c.win.AddToFeeds("All Articles", total, urTotal, &Article{feed: "allarticles"})
+	c.win.AddToFeeds("All Articles", urTotal, total, &Article{feed: "allarticles"})
 
 	// for k, v := range feeds {
 	// 	c.win.AddToFeeds(k, v, feedsTotal[k], &Article{feed: k})

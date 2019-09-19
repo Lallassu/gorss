@@ -50,6 +50,16 @@ func (d *DB) CleanupDB() {
 	if _, err := st.Exec(d.c.conf.DaysToKeepDeletedArticlesInDB); err != nil {
 		log.Println(err)
 	}
+
+	st2, err := d.db.Prepare("delete from articles where published < date('now', '? day') and read = true")
+	if err != nil {
+		log.Println(err)
+	}
+	defer st2.Close()
+
+	if _, err := st2.Exec(d.c.conf.DaysToKeepReadArticlesInDB); err != nil {
+		log.Println(err)
+	}
 }
 
 func (d *DB) All() []Article {
