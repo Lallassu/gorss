@@ -1,5 +1,5 @@
 # GORSS - Go RSS Reader
-[![Go Report Card](https://goreportcard.com/badge/github.com/lallassu/gorss)](https://goreportcard.com/report/github.com/lallassu/gorss)
+
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](http://www.opensource.org/licenses/MIT)
 
 ## About
