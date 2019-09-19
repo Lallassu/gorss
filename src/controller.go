@@ -63,6 +63,8 @@ func (c *Controller) Init(cfg, theme string) {
 
 	c.UpdateLoop()
 
+	c.db.CleanupDB()
+
 	c.win.Start()
 }
 
@@ -141,12 +143,15 @@ func (c *Controller) UpdateFeeds() {
 				continue
 			}
 
-			published := time.Now()
+			var published time.Time
 			if item.PublishedParsed != nil {
 				published = *item.PublishedParsed
-			} else {
+			} else if item.UpdatedParsed != nil {
 				published = *item.UpdatedParsed
+			} else {
+				published = time.Now()
 			}
+
 			content := item.Description
 			if content == "" {
 				content = item.Content
@@ -320,7 +325,7 @@ func (c *Controller) GetArticleForSelection() *Article {
 	return nil
 }
 
-// SelectFeed
+// SelectFeed is used as a callback for feed selection
 func (c *Controller) SelectFeed(row, col int) {
 	if row <= 0 {
 		return
@@ -336,6 +341,7 @@ func (c *Controller) SelectFeed(row, col int) {
 	}
 }
 
+// SelectArticle is used a hook for article selection
 func (c *Controller) SelectArticle(row, col int) {
 	if c.activeFeed == "unread" && row == 0 {
 		if c.prevArticle != nil {
@@ -371,23 +377,21 @@ func (c *Controller) SelectArticle(row, col int) {
 
 }
 
+// Input handles keystrokes
 func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 	keyName := string(e.Name())
 	if strings.Contains(keyName, "Rune") {
 		keyName = string(e.Rune())
 	}
 
-	if keyName == c.conf.KeyQuit {
+	switch keyName {
+	case c.conf.KeyQuit:
 		c.quit <- 1
-		return nil
-	}
 
-	if keyName == c.conf.KeySwitchWindows {
+	case c.conf.KeySwitchWindows:
 		c.win.SwitchFocus()
-		return nil
-	}
 
-	if keyName == c.conf.KeyMarkLink {
+	case c.conf.KeyMarkLink:
 		a := c.GetArticleForSelection()
 		if a == nil {
 			return nil
@@ -407,21 +411,15 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 			c.linksToOpen = append(c.linksToOpen, a.link)
 		}
 		c.ShowArticles(c.activeFeed)
-		return nil
-	}
 
-	// Open selected in browser
-	if keyName == c.conf.KeyOpenLink {
+	case c.conf.KeyOpenLink:
 		a := c.GetArticleForSelection()
 		if a == nil {
 			return nil
 		}
 		c.OpenLink(a.link)
-		return nil
-	}
 
-	// Delete article from DB and list
-	if keyName == c.conf.KeyDeleteArticle {
+	case c.conf.KeyDeleteArticle:
 		a := c.GetArticleForSelection()
 		if a != nil {
 			c.db.Delete(a)
@@ -442,137 +440,101 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 			c.ShowArticles(c.activeFeed)
 			c.ShowFeeds()
 		}
-		return nil
-	}
 
-	if keyName == c.conf.KeyMoveDown {
+	case c.conf.KeyMoveDown:
 		if c.activeFeed == "unread" {
 			c.win.articles.Select(0, 3)
 		}
 		c.win.MoveDown()
-		return nil
-	}
 
-	if keyName == c.conf.KeyMoveUp {
+	case c.conf.KeyMoveUp:
 		c.win.MoveUp()
-		return nil
-	}
 
-	// Sort on feed
-	if keyName == c.conf.KeySortByFeed {
+	case c.conf.KeySortByFeed:
 		sort.Slice(c.articles, func(i, j int) bool {
 			return c.articles[i].feed < c.articles[j].feed
 		})
 		c.ShowArticles(c.activeFeed)
-		return nil
-	}
 
-	// Sort on title
-	if keyName == c.conf.KeySortByTitle {
+	case c.conf.KeySortByTitle:
 		sort.Slice(c.articles, func(i, j int) bool {
 			return c.articles[i].title < c.articles[j].title
 		})
 		c.ShowArticles(c.activeFeed)
-		return nil
-	}
-	// Sort on date
-	if keyName == c.conf.KeySortByDate {
+
+	case c.conf.KeySortByDate:
 		sort.Slice(c.articles, func(i, j int) bool {
 			return c.articles[i].published.String() > c.articles[j].published.String()
 		})
 		c.ShowArticles(c.activeFeed)
-		return nil
-	}
 
-	// Sort on unread
-	if keyName == c.conf.KeySortByUnread {
+	case c.conf.KeySortByUnread:
 		sort.Slice(c.articles, func(i, j int) bool {
 			return strconv.FormatBool(c.articles[i].read) < strconv.FormatBool(c.articles[j].read)
 		})
 		c.ShowArticles(c.activeFeed)
-		return nil
-	}
 
-	// Mark all read
-	if keyName == c.conf.KeyMarkAllRead {
+	case c.conf.KeyMarkAllRead:
 		c.db.MarkAllRead()
 		c.GetArticlesFromDB()
 		c.ShowArticles(c.activeFeed)
 		c.ShowFeeds()
-		return nil
-	}
 
-	// Mark all unread
-	if keyName == c.conf.KeyMarkAllUnread {
+	case c.conf.KeyMarkAllUnread:
 		c.db.MarkAllUnread()
 		c.GetArticlesFromDB()
 		c.ShowArticles(c.activeFeed)
 		c.ShowFeeds()
-		return nil
-	}
 
-	// Switch to feeds
-	if keyName == c.conf.KeySelectFeedWindow {
+	case c.conf.KeySelectFeedWindow:
 		c.win.SelectFeedWindow()
-		return nil
-	}
-	if keyName == c.conf.KeySelectArticleWindow {
-		c.win.SelectArticleWindow()
-		return nil
-	}
-	if keyName == c.conf.KeySelectPreviewWindow {
-		c.win.SelectPreviewWindow()
-		return nil
-	}
 
-	// Open all marked links
-	if keyName == c.conf.KeyOpenMarked {
+	case c.conf.KeySelectArticleWindow:
+		c.win.SelectArticleWindow()
+
+	case c.conf.KeySelectPreviewWindow:
+		c.win.SelectPreviewWindow()
+
+	case c.conf.KeyOpenMarked:
 		for _, l := range c.linksToOpen {
 			c.OpenLink(l)
 		}
 		c.linksToOpen = []string{}
 		c.ShowArticles(c.activeFeed)
-		return nil
-	}
 
-	// Toggle preview
-	if keyName == c.conf.KeyTogglePreview {
+	case c.conf.KeyTogglePreview:
 		c.win.TogglePreview()
-		return nil
-	}
 
-	// Update feeds
-	if keyName == c.conf.KeyUpdateFeeds {
+	case c.conf.KeyUpdateFeeds:
 		c.UpdateFeeds()
-		return nil
-	}
 
-	// Toggle help
-	if keyName == c.conf.KeyToggleHelp {
+	case c.conf.KeyToggleHelp:
 		c.win.ToggleHelp()
-		return nil
-	}
 
-	for _, cmd := range c.conf.CustomCommands {
-		if keyName == cmd.Key {
-			// Substitute the parts we have support for
-			a := c.GetArticleForSelection()
-			if a != nil {
-				cmdStr := cmd.Cmd
-				cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Title", a.title)
-				cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Link", a.link)
-				cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Feed", a.feed)
-				cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Content", a.content)
+	default:
+		for _, cmd := range c.conf.CustomCommands {
+			if keyName == cmd.Key {
+				// Substitute the parts we have support for
+				a := c.GetArticleForSelection()
+				if a != nil {
+					cmdStr := cmd.Cmd
+					cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Title", a.title)
+					cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Link", a.link)
+					cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Feed", a.feed)
+					cmdStr = strings.ReplaceAll(cmdStr, "ARTICLE.Content", a.content)
 
-				command := exec.Command("/bin/sh", "-c", cmdStr)
-				if err := command.Run(); err != nil {
-					log.Printf("Failed to run command: %v", cmdStr)
+					command := exec.Command("/bin/sh", "-c", cmdStr)
+					if err := command.Run(); err != nil {
+						log.Printf("Failed to run command: %v", cmdStr)
+					}
+					return nil
 				}
-				return nil
 			}
 		}
+
+		// Fallback if no matches
+		return e
 	}
 
-	// Fallback to default only if none above matches
-	return e
+	return nil
 }

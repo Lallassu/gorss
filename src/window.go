@@ -1,8 +1,5 @@
 package main
 
-// https://godoc.org/github.com/gdamore/tcell
-// https://godoc.org/github.com/rivo/tview
-
 import (
 	"fmt"
 	"github.com/gdamore/tcell"
@@ -15,6 +12,7 @@ import (
 	"time"
 )
 
+// Window holds all information regarding the Window layout and functionality
 type Window struct {
 	c           *Controller
 	feeds       *tview.Table
@@ -35,6 +33,7 @@ type Window struct {
 	nFeeds      int
 }
 
+// Init sets up all information regarding widgets
 func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Controller) {
 	w.c = c
 
@@ -76,7 +75,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	i := 1
 	configKeys := c.GetConfigKeys()
 	var keys []string
-	for k, _ := range configKeys {
+	for k := range configKeys {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -127,20 +126,23 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	w.SetupWindow()
 }
 
+// RegisterSelectedFeedFunc registers a hook function for selecting feed
 func (w *Window) RegisterSelectedFeedFunc(f func(r, c int)) {
 	w.feeds.SetSelectionChangedFunc(f)
 }
 
+// RegisterSelectedFunc registers a hook function for selected article
 func (w *Window) RegisterSelectedFunc(f func(r, c int)) {
 	w.articles.SetSelectedFunc(f)
 }
 
+// RegisterSelectionChangedFunc registers a hook for change events for articles
 func (w *Window) RegisterSelectionChangedFunc(f func(r, c int)) {
 	w.articles.SetSelectionChangedFunc(f)
 }
 
+// SetupWindow initiates the window layout
 func (w *Window) SetupWindow() {
-
 	w.flexMiddle = tview.NewFlex().SetDirection(tview.FlexRow)
 	w.flexMiddle.AddItem(w.articles, 0, w.c.conf.ArticleWindowSizeRatio, false)
 	w.flexMiddle.AddItem(w.preview, 0, w.c.conf.PreviewWindowSizeRatio, false)
@@ -160,12 +162,14 @@ func (w *Window) SetupWindow() {
 	w.layout.AddItem(w.flexStatus, 0, 1, false)
 }
 
+// Start initiates the application for the window system and sets its root
 func (w *Window) Start() {
 	if err := w.app.SetRoot(w.layout, true).SetFocus(w.articles).Run(); err != nil {
 		panic(err)
 	}
 }
 
+// ToggleHelp shows/hides the keyboard shortchuts
 func (w *Window) ToggleHelp() {
 	if !w.showHelp {
 		w.flexMiddle = w.flexMiddle.RemoveItem(w.preview)
@@ -180,6 +184,7 @@ func (w *Window) ToggleHelp() {
 	}
 }
 
+// TogglePreview shows/hides the preview window for an article
 func (w *Window) TogglePreview() {
 	if !w.showPreview {
 		w.flexMiddle = w.flexMiddle.AddItem(w.preview, 0, 1, false)
@@ -190,6 +195,7 @@ func (w *Window) TogglePreview() {
 	}
 }
 
+// UpdateStatusTicker calls StatusUpdate periodically
 func (w *Window) UpdateStatusTicker() {
 	w.StatusUpdate()
 	ticker := time.NewTicker(1 * time.Second)
@@ -203,6 +209,7 @@ func (w *Window) UpdateStatusTicker() {
 	}()
 }
 
+// StatusUpdate updates the status window with updated information
 func (w *Window) StatusUpdate() {
 	// Update time
 	c := w.status.GetCell(0, 0)
@@ -279,6 +286,7 @@ func (w *Window) StatusUpdate() {
 	w.app.Draw()
 }
 
+// ClearArticles resets the articles window
 func (w *Window) ClearArticles() {
 	w.nArticles = 0
 	w.articles.Clear()
@@ -312,6 +320,7 @@ func (w *Window) ClearArticles() {
 	w.articles.SetSelectable(true, false)
 }
 
+// ClearFeeds resets the feed window
 func (w *Window) ClearFeeds() {
 	w.feeds.Clear()
 	w.feeds.SetTitle(fmt.Sprintf("%s Feeds", w.c.theme.FeedIcon)).SetTitleColor(tcell.GetColor(w.c.theme.FeedBorderTitle))
@@ -341,6 +350,7 @@ func (w *Window) ClearFeeds() {
 	w.feeds.SetSelectable(true, false)
 }
 
+// AddToFeeds add a new feed to the feed window
 func (w *Window) AddToFeeds(name string, unread, total int, ref *Article) {
 	w.nFeeds++
 
@@ -373,6 +383,7 @@ func (w *Window) AddToFeeds(name string, unread, total int, ref *Article) {
 	nc.SetReference(ref)
 }
 
+// ArticlesHasFocus returns true if the aricles window has focus
 func (w *Window) ArticlesHasFocus() bool {
 	if w.app.GetFocus() == w.articles {
 		return true
@@ -380,6 +391,7 @@ func (w *Window) ArticlesHasFocus() bool {
 	return false
 }
 
+// MoveDown handles a keypress for moving down in feeds/articles
 func (w *Window) MoveDown() {
 	p := w.app.GetFocus()
 	if p == w.articles {
@@ -400,6 +412,7 @@ func (w *Window) MoveDown() {
 	}
 }
 
+// MoveUp handles a keypress for moving up in feeds/articles
 func (w *Window) MoveUp() {
 	p := w.app.GetFocus()
 	if p == w.articles {
@@ -418,6 +431,7 @@ func (w *Window) MoveUp() {
 	}
 }
 
+// SwitchFocus switches the focus between windows in a round-robin manner
 func (w *Window) SwitchFocus() {
 	p := w.app.GetFocus()
 	if p == w.feeds {
@@ -433,18 +447,22 @@ func (w *Window) SwitchFocus() {
 	}
 }
 
+// SelectFeedWindow selects the feed window (focus)
 func (w *Window) SelectFeedWindow() {
 	w.app.SetFocus(w.feeds)
 }
 
+// SelectArticleWindow selects the article window (focus)
 func (w *Window) SelectArticleWindow() {
 	w.app.SetFocus(w.articles)
 }
 
+// SelectPreviewWindow selects the preview window (focus)
 func (w *Window) SelectPreviewWindow() {
 	w.app.SetFocus(w.preview)
 }
 
+// AddToArticles adds an article to the article window
 func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	if a == nil {
 		return
@@ -539,6 +557,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	nc.SetText(ncText)
 }
 
+// AddPreview shows an article in the preview window
 func (w *Window) AddPreview(a *Article) {
 	parsed, err := html2text.FromString(a.content, html2text.Options{PrettyTables: true})
 	if err != nil {

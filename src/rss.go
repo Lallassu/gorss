@@ -8,11 +8,13 @@ import (
 	"net/http"
 )
 
+// RSS structure for handle parsing of RSS/Atom feeds
 type RSS struct {
 	feeds []*gofeed.Feed
 	c     *Controller
 }
 
+// Init reads an feed related configuration
 func (r *RSS) Init(c *Controller) {
 	r.c = c
 
@@ -28,13 +30,13 @@ func (r *RSS) Init(c *Controller) {
 		for _, b := range doc.Body.Outlines {
 			if b.Outlines != nil {
 				for _, o := range b.Outlines {
-					url := r.GetUrlFromOPML(o)
+					url := r.GetURLFromOPML(o)
 					if url != "" {
 						r.c.conf.Feeds = append(r.c.conf.Feeds, url)
 					}
 				}
 			} else {
-				url := r.GetUrlFromOPML(b)
+				url := r.GetURLFromOPML(b)
 				if url != "" {
 					r.c.conf.Feeds = append(r.c.conf.Feeds, url)
 				}
@@ -43,7 +45,8 @@ func (r *RSS) Init(c *Controller) {
 	}
 }
 
-func (r *RSS) GetUrlFromOPML(b opml.Outline) string {
+// GetURLFromOPML retrieves any URL from the OPML object
+func (r *RSS) GetURLFromOPML(b opml.Outline) string {
 	str := ""
 	if b.XMLURL != "" {
 		str = b.XMLURL
@@ -55,6 +58,7 @@ func (r *RSS) GetUrlFromOPML(b opml.Outline) string {
 	return str
 }
 
+// Update fetches all articles for all feeds
 func (r *RSS) Update() {
 	fp := gofeed.NewParser()
 	r.feeds = []*gofeed.Feed{}
@@ -68,7 +72,8 @@ func (r *RSS) Update() {
 	}
 }
 
-// Do a little dance to fake user agent.
+// FetchURL fetches the feed URL and also fakes the user-agent to be able
+// to retrieve data from sites like reddit.
 func (r *RSS) FetchURL(fp *gofeed.Parser, url string) (feed *gofeed.Feed, err error) {
 	client := &http.Client{}
 
@@ -77,7 +82,6 @@ func (r *RSS) FetchURL(fp *gofeed.Parser, url string) (feed *gofeed.Feed, err er
 		return nil, err
 	}
 
-	// We can't fetch w/o faking user-agent for sites such as Reddit :/
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36")
 	resp, err := client.Do(req)
 

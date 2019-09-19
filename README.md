@@ -1,4 +1,5 @@
 # GORSS - Go RSS Reader
+[![Go Report Card](https://goreportcard.com/badge/github.com/lallassu/gorss)](https://goreportcard.com/report/github.com/lallassu/gorss)
 
 ## About
 Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
@@ -164,4 +165,7 @@ Themes are configured with JSON, default example below:
 ![night theme](preview/night.png)
 
 ## License
-MIT
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](http://www.opensource.org/licenses/MIT)
+
+This is distributed under the [MIT License](http://www.opensource.org/licenses/MIT).
+

@@ -2,17 +2,20 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"strings"
 	"time"
 )
 
+// DB holds the database information
 type DB struct {
 	db *sql.DB
 	c  *Controller
 }
 
+// Init setups the database and creates tables if needed.
 func (d *DB) Init(c *Controller) error {
 	d.c = c
 	db, err := sql.Open("sqlite3", "./gorss.db")
@@ -40,28 +43,36 @@ func (d *DB) Init(c *Controller) error {
 	return nil
 }
 
+// CleanupDB removes old and deleted articles
 func (d *DB) CleanupDB() {
-	st, err := d.db.Prepare("delete from articles where published < date('now', '? day') and deleted = true")
+	st, err := d.db.Prepare(fmt.Sprintf(
+		"delete from articles where published < date('now', '%d day') and deleted = true",
+		d.c.conf.DaysToKeepDeletedArticlesInDB),
+	)
 	if err != nil {
 		log.Println(err)
 	}
 	defer st.Close()
 
-	if _, err := st.Exec(d.c.conf.DaysToKeepDeletedArticlesInDB); err != nil {
+	if _, err := st.Exec(); err != nil {
 		log.Println(err)
 	}
 
-	st2, err := d.db.Prepare("delete from articles where published < date('now', '? day') and read = true")
+	st2, err := d.db.Prepare(fmt.Sprintf(
+		"delete from articles where published < date('now', '%d day') and read = true",
+		d.c.conf.DaysToKeepReadArticlesInDB),
+	)
 	if err != nil {
 		log.Println(err)
 	}
 	defer st2.Close()
 
-	if _, err := st2.Exec(d.c.conf.DaysToKeepReadArticlesInDB); err != nil {
+	if _, err := st2.Exec(); err != nil {
 		log.Println(err)
 	}
 }
 
+// All fetches all articles from the database
 func (d *DB) All() []Article {
 	st, err := d.db.Prepare("select id,feed,title,content,published,link,read from articles where deleted = 0 order by id")
 	if err != nil {
@@ -113,11 +124,7 @@ func (d *DB) All() []Article {
 	return articles
 }
 
-func (d *DB) AllSaved() []Article {
-
-	return nil
-}
-
+// Save adds a new article to database if the title doesn't already exists.
 func (d *DB) Save(a Article) error {
 	// First make sure that the same articl doesn't already exists.
 	st, err := d.db.Prepare("select title from articles where title = ? order by id")
@@ -154,6 +161,7 @@ func (d *DB) Save(a Article) error {
 	return nil
 }
 
+// Delete marks an article as deleted. Will not remove it from DB (see CleanupDB)
 func (d *DB) Delete(a *Article) {
 	st, err := d.db.Prepare("update articles set deleted = true where id = ?")
 	if err != nil {
@@ -166,6 +174,7 @@ func (d *DB) Delete(a *Article) {
 	}
 }
 
+// MarkRead marks an article as read in the database
 func (d *DB) MarkRead(a *Article) error {
 	st, err := d.db.Prepare("update articles set read = true where id = ?")
 	if err != nil {
@@ -179,6 +188,7 @@ func (d *DB) MarkRead(a *Article) error {
 	return nil
 }
 
+// MarkUnread marks an article as unread in the database
 func (d *DB) MarkUnread(a Article) error {
 	st, err := d.db.Prepare("update articles set read = false where id = '?'")
 	if err != nil {
@@ -192,6 +202,7 @@ func (d *DB) MarkUnread(a Article) error {
 	return nil
 }
 
+// MarkAllRead marks all articles in the database as read
 func (d *DB) MarkAllRead() {
 	st, err := d.db.Prepare("update articles set read = true")
 	if err != nil {
@@ -204,6 +215,7 @@ func (d *DB) MarkAllRead() {
 	}
 }
 
+// MarkAllUnread marks all articles in the database as not read
 func (d *DB) MarkAllUnread() {
 	st, err := d.db.Prepare("update articles set read = false")
 	if err != nil {

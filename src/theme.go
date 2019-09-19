@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// Theme holds all colors for the theme
 type Theme struct {
 	FeedNames          []string `json:"feedNames"`
 	Date               string   `json:"date"`
@@ -35,6 +36,7 @@ type Theme struct {
 	StatusBrackets     string   `json:"statusBrackets"`
 }
 
+// LoadTheme loads a theme file and parses it.
 func LoadTheme(file string) Theme {
 	var theme Theme
 	themeFile, err := os.Open(file)
