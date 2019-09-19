@@ -33,18 +33,18 @@ type Controller struct {
 
 // Init initiates the controller with database handles etc.
 // It also starts the update loop and window handling.
-func (c *Controller) Init(cfg, theme string) {
+func (c *Controller) Init(cfg, theme, db string) {
 	c.quit = make(chan int)
 
 	c.conf = LoadConfiguration(cfg)
 	c.theme = LoadTheme(theme)
 
-	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
 	c.articles = make([]Article, 0)
 
 	c.db = &DB{}
-	if err := c.db.Init(c); err != nil {
+	if err := c.db.Init(c, db); err != nil {
 		log.Fatal("Database init failed.")
 	}
 

@@ -16,9 +16,9 @@ type DB struct {
 }
 
 // Init setups the database and creates tables if needed.
-func (d *DB) Init(c *Controller) error {
+func (d *DB) Init(c *Controller, dbFile string) error {
 	d.c = c
-	db, err := sql.Open("sqlite3", "./gorss.db")
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		log.Println(err)
 	}

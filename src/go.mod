@@ -3,6 +3,7 @@ module main
 go 1.12
 
 require (
+	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/PuerkitoBio/goquery v1.5.0 // indirect
 	github.com/gdamore/tcell v1.2.0
 	github.com/gilliek/go-opml v1.0.0
