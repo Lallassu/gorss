@@ -8,8 +8,6 @@ Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 [Screenshots](#screenshots)
 
 
-Any error will be written to `gorss.log`. 
-
 ## Usage
 Currently there are no installation packages. But there exists prebuilt binaries for Linux and OSX.
 

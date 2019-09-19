@@ -35,12 +35,6 @@ type Controller struct {
 // It also starts the update loop and window handling.
 func (c *Controller) Init(cfg, theme string) {
 	c.quit = make(chan int)
-	f, err := os.OpenFile("gorss.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Printf("error opening file: %v", err)
-	}
-	log.SetOutput(f)
-	defer f.Close()
 
 	c.conf = LoadConfiguration(cfg)
 	c.theme = LoadTheme(theme)
