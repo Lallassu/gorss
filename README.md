@@ -3,15 +3,28 @@
 ## About
 Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 
-![Overview](preview.png)
+![Overview](preview/preview.png)
 
 [Screenshots](#screenshots)
+
+
+Any error will be written to `gorss.log`. Note that it also logs key-presses to `gorss.log` in order to 
+easily spot what keys you might want to bind in `gorss.conf`.
+
+## Install/Use
+Currently there are no installation packages. But there exists prebuilt binaries for Linux and OSX.
 
 Prebuilt binaries exists in `bin` folder. You will need the `gorss.conf` and `default.theme` to execute
 the binaries.
 
-Any error will be written to `gorss.log`. Note that it also logs key-presses to `gorss.log` in order to 
-easily spot what keys you might want to bind in `gorss.conf`.
+```
+./gorss -config gorss.conf -theme default.theme
+```
+
+To build and run use the makefile.
+```
+make run
+```
 
 ## Features
 - RSS and Atom support (via github.com/mmcdole/gofeed)
@@ -138,9 +151,9 @@ Themes are configured with JSON, default example below:
 ```
 
 ## [Screenshots]
-![default theme](default.png)
-![irssi theme](irssi.png)
-![night theme](night.png)
+![default theme](preview/default.png)
+![irssi theme](preview/irssi.png)
+![night theme](preview/night.png)
 
 ## License
 MIT
