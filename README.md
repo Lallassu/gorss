@@ -30,6 +30,7 @@ make run
 
 ## Features
 - OPML Support for loading feed URLs (`opmlFile` in gorss.conf)
+- Support for XDG configuration
 - RSS and Atom support (via github.com/mmcdole/gofeed)
 - Highlights for configurable words
 - Keyboard shortcuts highly configurable
