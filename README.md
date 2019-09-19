@@ -10,7 +10,7 @@ Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 
 Any error will be written to `gorss.log`. 
 
-## Install/Use
+## Usage
 Currently there are no installation packages. But there exists prebuilt binaries for Linux and OSX.
 
 Prebuilt binaries exists in `bin` folder. You will need the `gorss.conf` and `default.theme` to execute
@@ -19,6 +19,9 @@ the binaries.
 ```
 ./gorss -config gorss.conf -theme default.theme
 ```
+
+Gorss expect to have `gorss.conf` and `default.theme` in the same directory as `gorss` itself if not
+starting it with parameters as above.
 
 To build and run use the makefile.
 ```
@@ -53,14 +56,21 @@ It's possible to specify configuration file as a flag, default is `gorss.conf`.
         "google",
         "network",
         "math",
-        "tesla"
+        "toyota"
     ],
+    "OPMLFile": "../example_ompl.xml",
     "feeds": [
         "https://news.ycombinator.com/rss",
         "https://www.sweclockers.com/feeds/nyheter",
-        "https://www.reddit.com/r/homeassistant/.rss"
+        "https://www.reddit.com/r/golang/.rss",
+        "https://www.reddit.com/r/programming/.rss"
     ],
-    "secondsBetweenUpdates": 120,
+    "feedWindowSizeRatio": 2,
+    "articlePreviewWindowSizeRatio": 5,
+    "articleWindowSizeRatio": 2,
+    "previewWindowSizeRatio": 1,
+    "daysToKeepDeletedArticlesInDB": 1,
+    "secondsBetweenUpdates": 300,
     "skipPreviewInTab": true,
     "keyOpenLink": "Backspace2",
     "keyMarkLink": "Enter",

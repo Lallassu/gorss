@@ -1,7 +1,5 @@
 package main
 
-// https://godoc.org/github.com/mmcdole/gofeed#example-Parser-ParseString
-
 import (
 	"fmt"
 	"github.com/gilliek/go-opml/opml"
@@ -22,7 +20,7 @@ func (r *RSS) Init(c *Controller) {
 	if r.c.conf.OPMLFile != "" {
 		doc, err := opml.NewOPMLFromFile(r.c.conf.OPMLFile)
 		if err != nil {
-			log.Fatal("Failed to load OPML file", err)
+			log.Printf("Failed to load OPML file, %v", err)
 		}
 
 		// Add URLs to the list of feeds
@@ -60,7 +58,6 @@ func (r *RSS) Update() {
 	fp := gofeed.NewParser()
 	r.feeds = []*gofeed.Feed{}
 	for _, f := range r.c.conf.Feeds {
-		//feed, _ := fp.ParseURL(f)
 		feed, err := r.FetchURL(fp, f)
 		if err != nil {
 			log.Printf("error fetching url: %s, err: %v", f, err)
