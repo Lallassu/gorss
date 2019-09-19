@@ -382,7 +382,6 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 	if strings.Contains(keyName, "Rune") {
 		keyName = string(e.Rune())
 	}
-	log.Println("Pressed:", keyName)
 
 	if keyName == c.conf.KeyQuit {
 		c.quit <- 1

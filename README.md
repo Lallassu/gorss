@@ -8,8 +8,7 @@ Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 [Screenshots](#screenshots)
 
 
-Any error will be written to `gorss.log`. Note that it also logs key-presses to `gorss.log` in order to 
-easily spot what keys you might want to bind in `gorss.conf`.
+Any error will be written to `gorss.log`. 
 
 ## Install/Use
 Currently there are no installation packages. But there exists prebuilt binaries for Linux and OSX.
@@ -27,6 +26,7 @@ make run
 ```
 
 ## Features
+- OPML Support for loading feed URLs (`opmlFile` in gorss.conf)
 - RSS and Atom support (via github.com/mmcdole/gofeed)
 - Highlights for configurable words
 - Keyboard shortcuts highly configurable

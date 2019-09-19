@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Highlights                    []string  `json:"highlights"`
 	Feeds                         []string  `json:"feeds"`
+	OPMLFile                      string    `json:"opmlFile"`
 	FeedWindowSizeRatio           int       `json:"feedWindowSizeRatio"`
 	ArticleWindowSizeRatio        int       `json:"articleWindowSizeRatio"`
 	PreviewWindowSizeRatio        int       `json:"previewWindowSizeRatio"`

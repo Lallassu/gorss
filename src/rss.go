@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gilliek/go-opml/opml"
 	"github.com/mmcdole/gofeed"
 	"log"
 	"net/http"
@@ -16,6 +17,43 @@ type RSS struct {
 
 func (r *RSS) Init(c *Controller) {
 	r.c = c
+
+	// Check if we have any OMPL file to load
+	if r.c.conf.OPMLFile != "" {
+		doc, err := opml.NewOPMLFromFile(r.c.conf.OPMLFile)
+		if err != nil {
+			log.Fatal("Failed to load OPML file", err)
+		}
+
+		// Add URLs to the list of feeds
+		for _, b := range doc.Body.Outlines {
+			if b.Outlines != nil {
+				for _, o := range b.Outlines {
+					url := r.GetUrlFromOPML(o)
+					if url != "" {
+						r.c.conf.Feeds = append(r.c.conf.Feeds, url)
+					}
+				}
+			} else {
+				url := r.GetUrlFromOPML(b)
+				if url != "" {
+					r.c.conf.Feeds = append(r.c.conf.Feeds, url)
+				}
+			}
+		}
+	}
+}
+
+func (r *RSS) GetUrlFromOPML(b opml.Outline) string {
+	str := ""
+	if b.XMLURL != "" {
+		str = b.XMLURL
+	} else if b.HTMLURL != "" {
+		str = b.HTMLURL
+	} else if b.URL != "" {
+		str = b.URL
+	}
+	return str
 }
 
 func (r *RSS) Update() {
