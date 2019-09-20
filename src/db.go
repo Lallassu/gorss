@@ -46,7 +46,7 @@ func (d *DB) Init(c *Controller, dbFile string) error {
 // CleanupDB removes old and deleted articles
 func (d *DB) CleanupDB() {
 	st, err := d.db.Prepare(fmt.Sprintf(
-		"delete from articles where published < date('now', '%d day') and deleted = true",
+		"delete from articles where published < date('now', '-%d day') and deleted = true",
 		d.c.conf.DaysToKeepDeletedArticlesInDB),
 	)
 	if err != nil {
@@ -59,7 +59,7 @@ func (d *DB) CleanupDB() {
 	}
 
 	st2, err := d.db.Prepare(fmt.Sprintf(
-		"delete from articles where published < date('now', '%d day') and read = true",
+		"delete from articles where published < date('now', '-%d day') and read = true",
 		d.c.conf.DaysToKeepReadArticlesInDB),
 	)
 	if err != nil {
@@ -74,7 +74,7 @@ func (d *DB) CleanupDB() {
 
 // All fetches all articles from the database
 func (d *DB) All() []Article {
-	st, err := d.db.Prepare("select id,feed,title,content,published,link,read from articles where deleted = 0 order by id")
+	st, err := d.db.Prepare("select id,feed,title,content,published,link,read from articles where deleted = false order by id")
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -84,6 +84,7 @@ func (d *DB) All() []Article {
 	rows, err := st.Query()
 	if err != nil {
 		log.Println(err)
+		return nil
 	}
 	defer rows.Close()
 

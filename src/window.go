@@ -111,7 +111,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	w.status.SetBackgroundColor(tcell.GetColor(w.c.theme.StatusBackground))
 	w.status.SetFixed(1, 6)
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 6; i++ {
 		ts = tview.NewTableCell("")
 		ts.SetAlign(tview.AlignLeft)
 		ts.Attributes |= tcell.AttrBold
@@ -283,7 +283,24 @@ func (w *Window) StatusUpdate() {
 		),
 	)
 
+	c = w.status.GetCell(0, 5)
+	c.SetText(
+		fmt.Sprintf(
+			"[%s][[%s]Help: [%s]%s[%s]]",
+			w.c.theme.StatusBrackets,
+			w.c.theme.StatusKey,
+			w.c.theme.StatusText,
+			w.c.conf.KeyToggleHelp,
+			w.c.theme.StatusBrackets,
+		),
+	)
+
 	w.app.Draw()
+}
+
+// ClearPreview clears the preview window
+func (w *Window) ClearPreview() {
+	w.preview.Clear()
 }
 
 // ClearArticles resets the articles window
@@ -366,20 +383,23 @@ func (w *Window) AddToFeeds(name string, unread, total int, ref *Article) {
 		color = w.c.theme.FeedNames[idx]
 	}
 
-	nc := tview.NewTableCell(fmt.Sprintf("[%s]%d", w.c.theme.TotalColumn, total))
+	nc := tview.NewTableCell(fmt.Sprintf("%d", total))
 	nc.SetAlign(tview.AlignLeft)
 	w.feeds.SetCell(w.nFeeds, 0, nc)
 	nc.SetSelectable(true)
+	nc.SetTextColor(tcell.GetColor(w.c.theme.TotalColumn))
 
-	nc = tview.NewTableCell(fmt.Sprintf("[%s]%d", w.c.theme.UnreadColumn, unread))
+	nc = tview.NewTableCell(fmt.Sprintf("%d", unread))
 	nc.SetAlign(tview.AlignLeft)
 	w.feeds.SetCell(w.nFeeds, 1, nc)
 	nc.SetSelectable(true)
+	nc.SetTextColor(tcell.GetColor(w.c.theme.UnreadColumn))
 
-	nc = tview.NewTableCell(fmt.Sprintf("[%s]%s", color, name))
+	nc = tview.NewTableCell(fmt.Sprintf("%s", name))
 	nc.SetAlign(tview.AlignLeft)
 	w.feeds.SetCell(w.nFeeds, 2, nc)
 	nc.SetSelectable(true)
+	nc.SetTextColor(tcell.GetColor(color))
 	nc.SetReference(ref)
 }
 

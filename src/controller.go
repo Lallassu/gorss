@@ -58,12 +58,9 @@ func (c *Controller) Init(cfg, theme, db string) {
 	c.win.RegisterSelectionChangedFunc(c.SelectArticle)
 	c.win.RegisterSelectedFeedFunc(c.SelectFeed)
 
-	c.GetArticlesFromDB()
-	c.ShowFeeds()
+	c.db.CleanupDB()
 
 	c.UpdateLoop()
-
-	c.db.CleanupDB()
 
 	c.win.Start()
 }
@@ -99,11 +96,11 @@ func (c *Controller) GetConfigKeys() map[string]string {
 
 // UpdateLoop updates the feeds and windows
 func (c *Controller) UpdateLoop() {
-	c.UpdateFeeds() // Start by updating feeds.
 	c.GetArticlesFromDB()
+	c.UpdateFeeds() // Start by updating feeds.
 	c.ShowFeeds()
 	go func() {
-		updateWin := time.NewTicker(time.Duration(5) * time.Second)
+		updateWin := time.NewTicker(time.Duration(30) * time.Second)
 		updateFeeds := time.NewTicker(time.Duration(c.conf.SecondsBetweenUpdates) * time.Second)
 		for {
 			select {
@@ -151,6 +148,13 @@ func (c *Controller) UpdateFeeds() {
 			} else {
 				published = time.Now()
 			}
+
+			// Don't include old aritcles
+			if int(time.Now().Sub(published).Hours()/24) > c.conf.SkipArticlesOlderThanDays {
+				continue
+			}
+
+			// Transform the timestamp to local time
 
 			content := item.Description
 			if content == "" {
@@ -246,18 +250,13 @@ func (c *Controller) ShowFeeds() {
 	c.win.AddToFeeds("Unread", urTotal, urTotal, &Article{feed: "unread"})
 	c.win.AddToFeeds("All Articles", urTotal, total, &Article{feed: "allarticles"})
 
-	// for k, v := range feeds {
-	// 	c.win.AddToFeeds(k, v, feedsTotal[k], &Article{feed: k})
-	// }
 	var keys []string
 	for k := range feeds {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	// To perform the opertion you want
 	for _, k := range keys {
-		//fmt.Println("Key:", k, "Value:", m[k])
 		c.win.AddToFeeds(k, feeds[k], feedsTotal[k], &Article{feed: k})
 	}
 }
@@ -349,6 +348,7 @@ func (c *Controller) SelectArticle(row, col int) {
 			c.prevArticle.read = true
 			c.ShowArticles(c.activeFeed)
 			c.ShowFeeds()
+			c.win.ClearPreview()
 		}
 		return
 	}

@@ -11,13 +11,17 @@ Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 
 
 ## Usage
-Currently there are no installation packages. But there exists prebuilt binaries for Linux and OSX.
+Tarballs with prebuilt binaries for both Linux and OSX can be found under release page.
 
-Prebuilt binaries exists in `bin` folder. You will need the `gorss.conf` and `default.theme` to execute
-the binaries.
+Latest releases:
+![Linux Release](/lallassu/gorss/releases/latest/download/gorss_linux.tar.gz)
+![OSX Release](/lallassu/gorss/releases/latest/download/gorss_osx.tar.gz)
 
+Just start by running either `gorss_linux` or `gorss_osx` binary from the tarballs.
+
+You can also specify theme, configuration and database manually.
 ```
-./gorss -config gorss.conf -theme default.theme
+./gorss -config gorss.conf -theme default.theme -db mydb.db
 ```
 
 Gorss expect to have `gorss.conf` and `default.theme` in the same directory as `gorss` itself if not
@@ -27,6 +31,9 @@ To build and run use the makefile.
 ```
 make run
 ```
+
+The database `gorss.db` will be automatically created in your systems 'Data Home' directory. You can specify which database
+to use with the argument `-db` to the binary.
 
 ## Features
 - OPML Support for loading feed URLs (`opmlFile` in gorss.conf)
@@ -63,6 +70,7 @@ It's possible to specify configuration file as a flag, default is `gorss.conf`.
     "feeds": [
         "https://news.ycombinator.com/rss",
         "https://www.sweclockers.com/feeds/nyheter",
+        "https://www.reddit.com/r/homeassistant/.rss",
         "https://www.reddit.com/r/golang/.rss",
         "https://www.reddit.com/r/programming/.rss"
     ],
@@ -71,6 +79,8 @@ It's possible to specify configuration file as a flag, default is `gorss.conf`.
     "articleWindowSizeRatio": 2,
     "previewWindowSizeRatio": 1,
     "daysToKeepDeletedArticlesInDB": 1,
+    "daysToKeepReadArticlesInDB": 1,
+    "skipArticlesOlderThanDays": 10,
     "secondsBetweenUpdates": 300,
     "skipPreviewInTab": true,
     "keyOpenLink": "Backspace2",
