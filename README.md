@@ -28,6 +28,11 @@ To build and run use the makefile.
 make run
 ```
 
+In order to cross-compile `make release` for Linux on OSX you need to install the following:
+```
+brew install FiloSottile/musl-cross/musl-cross
+```
+
 The database `gorss.db` will be automatically created in your systems 'Data Home' directory. You can specify which database
 to use with the argument `-db` to the binary.
 
