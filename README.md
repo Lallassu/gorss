@@ -5,7 +5,7 @@
 ## About
 Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 
-![Overview](preview/preview.png)
+![Overview](preview/gorss.gif)
 
 [Screenshots](#screenshots)
 
@@ -14,8 +14,8 @@ Simple RSS/Atom reader written in Golang. Highly configurable and with themes.
 Tarballs with prebuilt binaries for both Linux and OSX can be found under release page.
 
 Latest releases:
-![Linux Release](/lallassu/gorss/releases/latest/download/gorss_linux.tar.gz)
-![OSX Release](/lallassu/gorss/releases/latest/download/gorss_osx.tar.gz)
+[Linux Release](/lallassu/gorss/releases/latest/download/gorss_linux.tar.gz)
+[OSX Release](/lallassu/gorss/releases/latest/download/gorss_osx.tar.gz)
 
 Just start by running either `gorss_linux` or `gorss_osx` binary from the tarballs.
 
