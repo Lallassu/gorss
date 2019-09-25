@@ -605,7 +605,7 @@ func GetTime(ts string) string {
   d_res := d_rex.FindStringSubmatch(ts)
   if i, err := strconv.Atoi(d_res[1]); err == nil {
     if i > 23 {
-      days := s / 24
+      days := i / 24
       return strconv.Itoa(days) + "d"
     }
   }
