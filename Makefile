@@ -1,6 +1,6 @@
 all: build release clean
 
-VERSION=`git tag |head -n1`
+VERSION=`git tag |tail -n1`
 build:
 	@cd src && go build -ldflags "-s -w -X main.version=${VERSION}" .
 
