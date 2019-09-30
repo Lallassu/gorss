@@ -11,10 +11,10 @@ run: build
 release:
 	@mkdir release
 	@mkdir dist
-	@CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ GOARCH=amd64 GOOS=linux CGO_ENABLED=1 go build -ldflags "-linkmode external -extldflags -static -s -w -X $(shell go list)/internal.Version=${VERSION}" -o ../release/gorss_linux ./cmd/gorss/...
-	@go build -ldflags "-s -w -X $(shell go list)/internal.Version=${VERSION}" -o ../release/gorss_osx ./cmd/gorss/...
+	@CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ GOARCH=amd64 GOOS=linux CGO_ENABLED=1 go build -ldflags "-linkmode external -extldflags -static -s -w -X $(shell go list)/internal.Version=${VERSION}" -o ./release/gorss_linux ./cmd/gorss/...
+	@go build -ldflags "-s -w -X $(shell go list)/internal.Version=${VERSION}" -o ./release/gorss_osx ./cmd/gorss/...
 	@cp gorss.conf dist/
-	@cp themes/default.theme gorss/
+	@cp themes/default.theme dist/
 	@cp -r themes dist/ 
 	@mv release/gorss_linux dist && tar cvfz gorss_linux.tar.gz dist
 	@rm dist/gorss_linux
