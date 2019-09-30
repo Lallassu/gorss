@@ -1,4 +1,4 @@
-module main
+module github.com/Lallassu/gorss
 
 go 1.12
 

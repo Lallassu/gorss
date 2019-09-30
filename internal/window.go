@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -302,7 +302,7 @@ func (w *Window) StatusUpdate() {
 			w.c.theme.StatusBrackets,
 			w.c.theme.StatusKey,
 			w.c.theme.StatusText,
-			version,
+			Version,
 			w.c.theme.StatusBrackets,
 		),
 	)

@@ -1,0 +1,4 @@
+package gorss
+
+/* gorss ...
+ */
