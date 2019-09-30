@@ -6,15 +6,15 @@ import (
 	"github.com/OpenPeeDeeP/xdg"
 	"log"
 	"os"
-)
 
-var version string
+	"github.com/Lallassu/gorss/internal"
+)
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
 	defaultConfig := "gorss.conf"
-	defaultTheme := "default.theme"
+	defaultTheme := "themes/default.theme"
 	defaultDB := "gorss.db"
 	configFile := flag.String("config", defaultConfig, "Configuration file")
 	themeFile := flag.String("theme", defaultTheme, "Theme file")
@@ -28,7 +28,7 @@ func main() {
 	db := *dbFile
 
 	if *versionFlag {
-		fmt.Printf("GORSS version: %s", version)
+		fmt.Printf("GORSS version: %s", internal.Version)
 		os.Exit(0)
 	}
 
@@ -76,7 +76,7 @@ func main() {
 	log.Printf("Using theme: %s\n", theme)
 	log.Printf("Using DB: %s\n", db)
 
-	co := &Controller{}
+	co := &internal.Controller{}
 
 	co.Init(cfg, theme, db)
 
