@@ -50,6 +50,7 @@ to use with the argument `-db` to the binary.
 - Backed by SQLite database
 - Mark articles as read
 - Mark all as read/unread
+- Undo last read (mark it as unread)
 
 ## Configuration Example (Default config)
 It's possible to specify configuration file as a flag, default is `gorss.conf`.
@@ -104,6 +105,7 @@ It's possible to specify configuration file as a flag, default is `gorss.conf`.
     "keyToggleHelp": "h",
     "keySwitchWindows": "Tab",
     "keyQuit": "Esc",
+    "keyUndoLastRead": "u",
     "customCommands": [
         { 
             "key": "j",

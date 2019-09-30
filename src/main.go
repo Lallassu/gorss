@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+var version string
+
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
@@ -17,12 +19,18 @@ func main() {
 	configFile := flag.String("config", defaultConfig, "Configuration file")
 	themeFile := flag.String("theme", defaultTheme, "Theme file")
 	dbFile := flag.String("db", defaultDB, "Database file")
+	versionFlag := flag.Bool("version", false, "Show version")
 
 	flag.Parse()
 
 	cfg := *configFile
 	theme := *themeFile
 	db := *dbFile
+
+	if *versionFlag {
+		fmt.Printf("GORSS version: %s", version)
+		os.Exit(0)
+	}
 
 	conf := xdg.New("", "gorss")
 

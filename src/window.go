@@ -111,7 +111,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	w.status.SetBackgroundColor(tcell.GetColor(w.c.theme.StatusBackground))
 	w.status.SetFixed(1, 6)
 
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 7; i++ {
 		ts = tview.NewTableCell("")
 		ts.SetAlign(tview.AlignLeft)
 		ts.Attributes |= tcell.AttrBold
@@ -291,6 +291,18 @@ func (w *Window) StatusUpdate() {
 			w.c.theme.StatusKey,
 			w.c.theme.StatusText,
 			w.c.conf.KeyToggleHelp,
+			w.c.theme.StatusBrackets,
+		),
+	)
+
+	c = w.status.GetCell(0, 6)
+	c.SetText(
+		fmt.Sprintf(
+			"[%s][[%s]Version: [%s]%s[%s]]",
+			w.c.theme.StatusBrackets,
+			w.c.theme.StatusKey,
+			w.c.theme.StatusText,
+			version,
 			w.c.theme.StatusBrackets,
 		),
 	)

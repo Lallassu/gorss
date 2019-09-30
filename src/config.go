@@ -42,6 +42,7 @@ type Config struct {
 	KeyToggleHelp                 string    `json:"keyToggleHelp"`
 	KeySwitchWindows              string    `json:"keySwitchWindows"`
 	KeyQuit                       string    `json:"keyQuit"`
+	KeyUndoLastRead               string    `json:"keyUndoLastRead"`
 	CustomCommands                []Command `json:"customCommands"`
 }
 
