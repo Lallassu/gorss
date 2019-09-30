@@ -1,9 +1,9 @@
-main
-./bin/main
-./bin/gorss
-gorss.log
-gorss.db
-gorss
-release
-TODO
+*~*
+*.bak
+*.log
+*.db
 
+/dist
+/gorss
+/release
+/TODO
