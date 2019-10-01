@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -27,7 +27,9 @@ type Controller struct {
 	aLock       sync.Mutex
 	conf        Config
 	theme       Theme
+	isUpdated   bool
 	prevArticle *Article
+	undoArticle *Article
 	lastUpdate  time.Time
 }
 
@@ -87,6 +89,10 @@ func (c *Controller) GetConfigKeys() map[string]string {
 	keys["Select Feed Window"] = c.conf.KeySelectFeedWindow
 	keys["Select Article Window"] = c.conf.KeySelectArticleWindow
 	keys["Select Preview Window"] = c.conf.KeySelectPreviewWindow
+	keys["Update Feeds"] = c.conf.KeyUpdateFeeds
+	keys["Switch Windows"] = c.conf.KeySwitchWindows
+	keys["Quit"] = c.conf.KeyQuit
+
 	for _, cmd := range c.conf.CustomCommands {
 		keys[cmd.Cmd] = cmd.Key
 	}
@@ -184,6 +190,7 @@ func (c *Controller) UpdateFeeds() {
 	}
 	c.lastUpdate = time.Now()
 	c.GetArticlesFromDB()
+	c.isUpdated = true
 	c.ShowArticles(c.activeFeed)
 }
 
@@ -281,8 +288,14 @@ func (c *Controller) ShowArticles(feed string) {
 		} else if feed == "allarticles" {
 			// pass - take all articles
 		} else if feed == "unread" {
-			if a.read {
-				continue
+			if c.prevArticle != nil && c.isUpdated {
+				if c.prevArticle.id != a.id && a.read {
+					continue
+				}
+			} else {
+				if a.read {
+					continue
+				}
 			}
 		} else {
 			if a.feed != c.activeFeed {
@@ -299,6 +312,7 @@ func (c *Controller) ShowArticles(feed string) {
 		}
 		c.win.AddToArticles(&c.articles[i], markedWeb)
 	}
+	c.isUpdated = false
 	c.win.articles.ScrollToBeginning()
 }
 
@@ -363,6 +377,7 @@ func (c *Controller) SelectArticle(row, col int) {
 		c.db.MarkRead(a)
 		a.read = true
 	}
+	c.undoArticle = c.prevArticle
 	c.prevArticle = a
 
 	c.win.AddPreview(a)
@@ -410,7 +425,14 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 		if !removed {
 			c.linksToOpen = append(c.linksToOpen, a.link)
 		}
-		c.ShowArticles(c.activeFeed)
+		if c.activeFeed != "unread" {
+			c.ShowArticles(c.activeFeed)
+		} else {
+			// Append the linkmarker icon
+			r, _ := c.win.articles.GetSelection()
+			cell := c.win.articles.GetCell(r, 1)
+			cell.SetText(fmt.Sprintf("%s%s", c.theme.LinkMarker, c.theme.UnreadMarker))
+		}
 
 	case c.conf.KeyOpenLink:
 		a := c.GetArticleForSelection()
@@ -510,6 +532,13 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 
 	case c.conf.KeyToggleHelp:
 		c.win.ToggleHelp()
+
+	case c.conf.KeyUndoLastRead:
+		c.undoArticle.read = false
+		c.prevArticle.read = false
+		c.prevArticle = c.undoArticle
+		c.ShowArticles(c.activeFeed)
+		c.win.articles.Select(1, 3)
 
 	default:
 		for _, cmd := range c.conf.CustomCommands {
