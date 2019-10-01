@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+  "strconv"
 )
 
 // Window holds all information regarding the Window layout and functionality
@@ -555,13 +556,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	}
 
 	str := time.Since(a.published).Round(time.Minute).String()
-	rex := regexp.MustCompile(`.*m(.*?)`)
-	res := rex.FindAllStringSubmatch(str, -1)
-
-	t := "-"
-	if len(res) > 0 && res[0] != nil {
-		t = string(res[0][0])
-	}
+  t := GetTime(str)
 
 	dc := tview.NewTableCell(
 		fmt.Sprintf(
@@ -614,4 +609,26 @@ func (w *Window) AddPreview(a *Article) {
 	)
 	w.preview.SetText(text)
 	w.preview.ScrollToBeginning()
+}
+
+// GetTime returns the timestring formatted as (%h%m < 24 hours < %d)
+func GetTime(ts string) string {
+  d_rex := regexp.MustCompile(`(\d+)h`)
+  d_res := d_rex.FindStringSubmatch(ts)
+  if len(d_res) > 0 {
+    if i, err := strconv.Atoi(d_res[1]); err == nil {
+      if i > 23 {
+        days := i / 24
+        return strconv.Itoa(days) + "d"
+      }
+    }
+  }
+
+  rex := regexp.MustCompile(`.*m(.*?)`)
+  res := rex.FindAllStringSubmatch(ts, -1)
+  if len(res) > 0 && res[0] != nil {
+    return string(res[0][0])
+  }
+
+  return "-"
 }
