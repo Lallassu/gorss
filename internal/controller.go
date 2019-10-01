@@ -540,6 +540,18 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 		c.ShowArticles(c.activeFeed)
 		c.win.articles.Select(1, 3)
 
+	case "h":
+		break
+
+	case "l":
+		break
+
+	case "Left":
+		break
+
+	case "Right":
+		break
+
 	default:
 		for _, cmd := range c.conf.CustomCommands {
 			if keyName == cmd.Key {
