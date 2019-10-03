@@ -191,6 +191,12 @@ func (c *Controller) UpdateFeeds() {
 	c.lastUpdate = time.Now()
 	c.GetArticlesFromDB()
 	c.isUpdated = true
+
+	// On update, sort by date.
+	sort.Slice(c.articles, func(i, j int) bool {
+		return c.articles[i].published.String() > c.articles[j].published.String()
+	})
+
 	c.ShowArticles(c.activeFeed)
 }
 
@@ -313,6 +319,7 @@ func (c *Controller) ShowArticles(feed string) {
 		c.win.AddToArticles(&c.articles[i], markedWeb)
 	}
 	c.isUpdated = false
+
 	c.win.articles.ScrollToBeginning()
 }
 
@@ -424,14 +431,18 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 		}
 		if !removed {
 			c.linksToOpen = append(c.linksToOpen, a.link)
-		}
-		if c.activeFeed != "unread" {
-			c.ShowArticles(c.activeFeed)
-		} else {
 			// Append the linkmarker icon
 			r, _ := c.win.articles.GetSelection()
 			cell := c.win.articles.GetCell(r, 1)
 			cell.SetText(fmt.Sprintf("%s%s", c.theme.LinkMarker, c.theme.UnreadMarker))
+		} else {
+			// Remove the linkmarker icon
+			r, _ := c.win.articles.GetSelection()
+			cell := c.win.articles.GetCell(r, 1)
+			cell.SetText(fmt.Sprintf("%s", c.theme.UnreadMarker))
+		}
+		if c.activeFeed != "unread" {
+			c.ShowArticles(c.activeFeed)
 		}
 
 	case c.conf.KeyOpenLink:
