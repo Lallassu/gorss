@@ -261,6 +261,13 @@ func (c *Controller) ShowFeeds() {
 	}
 
 	c.win.AddToFeeds("Unread", urTotal, urTotal, &Article{feed: "unread"})
+
+	// If there are no unread left, then we remove the prevArticle so that
+	// we don't add it again when updating the window.
+	if urTotal == 0 {
+		c.prevArticle = nil
+	}
+
 	c.win.AddToFeeds("All Articles", urTotal, total, &Article{feed: "allarticles"})
 
 	var keys []string
