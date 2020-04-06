@@ -481,13 +481,13 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 			c.ShowFeeds()
 		}
 
-	case c.conf.KeyMoveDown:
+	case c.conf.KeyMoveDown, "Down":
 		if c.activeFeed == "unread" {
 			c.win.articles.Select(0, 3)
 		}
 		c.win.MoveDown()
 
-	case c.conf.KeyMoveUp:
+	case c.conf.KeyMoveUp, "Up":
 		c.win.MoveUp()
 
 	case c.conf.KeySortByFeed:
