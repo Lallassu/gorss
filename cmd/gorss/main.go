@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/OpenPeeDeeP/xdg"
 	"log"
 	"os"
+
+	"github.com/OpenPeeDeeP/xdg"
 
 	"github.com/Lallassu/gorss/internal"
 )
@@ -16,8 +17,11 @@ func main() {
 	defaultConfig := "gorss.conf"
 	defaultTheme := "themes/default.theme"
 	defaultDB := "gorss.db"
+	defaultLog := "gorss.log"
+
 	configFile := flag.String("config", defaultConfig, "Configuration file")
 	themeFile := flag.String("theme", defaultTheme, "Theme file")
+	logFile := flag.String("log", defaultLog, "Log file")
 	dbFile := flag.String("db", defaultDB, "Database file")
 	versionFlag := flag.Bool("version", false, "Show version")
 
@@ -72,10 +76,26 @@ func main() {
 		}
 	}
 
+	if *logFile == defaultLog {
+		// Try to get using XDG
+		s := conf.QueryData(defaultLog)
+		if s != "" {
+			*logFile = s
+		} else {
+			*logFile = fmt.Sprintf("%s/%s", conf.DataHome(), defaultLog)
+		}
+	}
+
 	log.Printf("Using config: %s\n", cfg)
 	log.Printf("Using theme: %s\n", theme)
 	log.Printf("Using DB: %s\n", db)
+	log.Printf("Using log file: %s\n", *logFile)
 
+	if flog, err := os.Create(*logFile); err != nil {
+		log.Printf("Failed to create log file. Will log to stdout.")
+	} else {
+		log.SetOutput(flog)
+	}
 	co := &internal.Controller{}
 
 	co.Init(cfg, theme, db)

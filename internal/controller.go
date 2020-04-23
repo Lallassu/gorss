@@ -41,8 +41,6 @@ func (c *Controller) Init(cfg, theme, db string) {
 	c.conf = LoadConfiguration(cfg)
 	c.theme = LoadTheme(theme)
 
-	//log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-
 	c.articles = make([]Article, 0)
 
 	c.db = &DB{}
