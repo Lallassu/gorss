@@ -3,10 +3,11 @@ package internal
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"strings"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3" // nolint: golint
 )
 
 // DB holds the database information
@@ -54,7 +55,7 @@ func (d *DB) CleanupDB() {
 	}
 	defer st.Close()
 
-	if _, err := st.Exec(); err != nil {
+	if _, err = st.Exec(); err != nil {
 		log.Println(err)
 	}
 
@@ -127,14 +128,14 @@ func (d *DB) All() []Article {
 
 // Save adds a new article to database if the title doesn't already exists.
 func (d *DB) Save(a Article) error {
-	// First make sure that the same articl doesn't already exists.
-	st, err := d.db.Prepare("select title from articles where title = ? order by id")
+	// First make sure that the same article doesn't already exists.
+	st, err := d.db.Prepare("select title from articles where feed = ? and title = ? order by id")
 	if err != nil {
 		log.Println(err)
 	}
 	defer st.Close()
 
-	res, err := st.Query(a.title)
+	res, err := st.Query(a.feed, a.title)
 	if err != nil {
 		log.Println(err)
 	}
