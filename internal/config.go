@@ -10,40 +10,47 @@ import (
 
 // Config load the configuration from JSON file
 type Config struct {
-	Highlights                    []string  `json:"highlights"`
-	Feeds                         []string  `json:"feeds"`
-	OPMLFile                      string    `json:"opmlFile"`
-	FeedWindowSizeRatio           int       `json:"feedWindowSizeRatio"`
-	ArticleWindowSizeRatio        int       `json:"articleWindowSizeRatio"`
-	PreviewWindowSizeRatio        int       `json:"previewWindowSizeRatio"`
-	ArticlePreviewWindowSizeRatio int       `json:"articlePreviewWindowSizeRatio"`
-	SecondsBetweenUpdates         int       `json:"secondsBetweenUpdates"`
-	SkipArticlesOlderThanDays     int       `json:"skipArticlesOlderThanDays"`
-	DaysToKeepDeletedArticlesInDB int       `json:"daysToKeepDeletedArticlesInDB"`
-	DaysToKeepReadArticlesInDB    int       `json:"daysToKeepReadArticlesInDB"`
-	SkipPreviewInTab              bool      `json:"skipPreviewInTab"`
-	KeyOpenLink                   string    `json:"keyOpenLink"`
-	KeyMarkLink                   string    `json:"keyMarkLink"`
-	KeyOpenMarked                 string    `json:"keyOpenMarked"`
-	KeyDeleteArticle              string    `json:"keyDeleteArticle"`
-	KeyMoveDown                   string    `json:"keyMoveDown"`
-	KeyMoveUp                     string    `json:"keyMoveUp"`
-	KeySortByDate                 string    `json:"keySortByDate"`
-	KeySortByTitle                string    `json:"keySortByTitle"`
-	KeySortByUnread               string    `json:"keySortByUnread"`
-	KeySortByFeed                 string    `json:"keySortByFeed"`
-	KeyUpdateFeeds                string    `json:"keyUpdateFeeds"`
-	KeyMarkAllRead                string    `json:"keyMarkAllRead"`
-	KeyMarkAllUnread              string    `json:"keyMarkAllUnread"`
-	KeyTogglePreview              string    `json:"keyTogglePreview"`
-	KeySelectFeedWindow           string    `json:"keySelectFeedWindow"`
-	KeySelectArticleWindow        string    `json:"keySelectArticleWindow"`
-	KeySelectPreviewWindow        string    `json:"keySelectPreviewWindow"`
-	KeyToggleHelp                 string    `json:"keyToggleHelp"`
-	KeySwitchWindows              string    `json:"keySwitchWindows"`
-	KeyQuit                       string    `json:"keyQuit"`
-	KeyUndoLastRead               string    `json:"keyUndoLastRead"`
-	CustomCommands                []Command `json:"customCommands"`
+	Highlights                    []string      `json:"highlights"`
+	InputFeeds                    []interface{} `json:"feeds"`
+	Feeds                         []Feed        `json:"-"`
+	OPMLFile                      string        `json:"opmlFile"`
+	FeedWindowSizeRatio           int           `json:"feedWindowSizeRatio"`
+	ArticleWindowSizeRatio        int           `json:"articleWindowSizeRatio"`
+	PreviewWindowSizeRatio        int           `json:"previewWindowSizeRatio"`
+	ArticlePreviewWindowSizeRatio int           `json:"articlePreviewWindowSizeRatio"`
+	SecondsBetweenUpdates         int           `json:"secondsBetweenUpdates"`
+	SkipArticlesOlderThanDays     int           `json:"skipArticlesOlderThanDays"`
+	DaysToKeepDeletedArticlesInDB int           `json:"daysToKeepDeletedArticlesInDB"`
+	DaysToKeepReadArticlesInDB    int           `json:"daysToKeepReadArticlesInDB"`
+	SkipPreviewInTab              bool          `json:"skipPreviewInTab"`
+	KeyOpenLink                   string        `json:"keyOpenLink"`
+	KeyMarkLink                   string        `json:"keyMarkLink"`
+	KeyOpenMarked                 string        `json:"keyOpenMarked"`
+	KeyDeleteArticle              string        `json:"keyDeleteArticle"`
+	KeyMoveDown                   string        `json:"keyMoveDown"`
+	KeyMoveUp                     string        `json:"keyMoveUp"`
+	KeySortByDate                 string        `json:"keySortByDate"`
+	KeySortByTitle                string        `json:"keySortByTitle"`
+	KeySortByUnread               string        `json:"keySortByUnread"`
+	KeySortByFeed                 string        `json:"keySortByFeed"`
+	KeyUpdateFeeds                string        `json:"keyUpdateFeeds"`
+	KeyMarkAllRead                string        `json:"keyMarkAllRead"`
+	KeyMarkAllUnread              string        `json:"keyMarkAllUnread"`
+	KeyTogglePreview              string        `json:"keyTogglePreview"`
+	KeySelectFeedWindow           string        `json:"keySelectFeedWindow"`
+	KeySelectArticleWindow        string        `json:"keySelectArticleWindow"`
+	KeySelectPreviewWindow        string        `json:"keySelectPreviewWindow"`
+	KeyToggleHelp                 string        `json:"keyToggleHelp"`
+	KeySwitchWindows              string        `json:"keySwitchWindows"`
+	KeyQuit                       string        `json:"keyQuit"`
+	KeyUndoLastRead               string        `json:"keyUndoLastRead"`
+	CustomCommands                []Command     `json:"customCommands"`
+}
+
+// Feed -
+type Feed struct {
+	URL  string
+	Name string
 }
 
 // Command is used to parse a custom key->command from configuration file.
@@ -69,8 +76,28 @@ func LoadConfiguration(file string) Config {
 		log.Fatal("Failed to parse config file:", err)
 	}
 
+	// Convert Feeds to []Feed{}
+	conf.Feeds = make([]Feed, len(conf.InputFeeds))
+	for idx := range conf.InputFeeds {
+		switch v := conf.InputFeeds[idx].(type) {
+		case string:
+			// Old style
+			conf.Feeds[idx] = Feed{URL: v}
+		case map[string]interface{}:
+			// New style
+			url := v["url"].(string)
+			name := ""
+			if _, ok := v["name"]; ok {
+				name = v["name"].(string)
+			}
+			conf.Feeds[idx] = Feed{URL: url, Name: name}
+		default:
+			log.Fatalf("unable to convert %v to a feed", v)
+		}
+	}
+
 	// Validate that no keys are the same
-	keys := make(map[string]struct{}, 0)
+	keys := make(map[string]struct{})
 	val := reflect.Indirect(reflect.ValueOf(conf))
 	for i := 0; i < val.NumField(); i++ {
 		if strings.HasPrefix(val.Type().Field(i).Name, "Key") {

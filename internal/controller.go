@@ -69,7 +69,7 @@ func (c *Controller) Init(cfg, theme, db string) {
 // GetConfigKeys creates a list of keys that we want to present
 // in the help section.
 func (c *Controller) GetConfigKeys() map[string]string {
-	keys := make(map[string]string, 0)
+	keys := make(map[string]string)
 
 	keys["Open Link"] = c.conf.KeyOpenLink
 	keys["Mark Link"] = c.conf.KeyMarkLink
@@ -247,8 +247,8 @@ func (c *Controller) ShowFeeds() {
 		count   int
 		display string
 	}
-	feeds := make(map[string]*feed, 0)
-	feedsTotal := make(map[string]int, 0)
+	feeds := make(map[string]*feed)
+	feedsTotal := make(map[string]int)
 	urTotal := 0
 	total = 0
 	for _, a := range c.articles {

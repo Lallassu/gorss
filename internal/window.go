@@ -265,7 +265,7 @@ func (w *Window) StatusUpdate() {
 
 	c = w.status.GetCell(0, 3)
 	unread := 0
-	feeds := make(map[string]struct{}, 0)
+	feeds := make(map[string]struct{})
 	for _, a := range w.c.articles {
 		if _, ok := feeds[a.feed]; !ok {
 			feeds[a.feed] = struct{}{}
