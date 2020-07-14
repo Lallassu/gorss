@@ -54,6 +54,10 @@ to use with the argument `-db` to the binary.
 
 ## Configuration Example (Default config)
 It's possible to specify configuration file as a flag, default is `gorss.conf`.
+
+The configuration file can specify URLs of feeds as strings, or, if you want to
+customise the name of the feed as it is shown in your Gorss, as objects with url
+and name fields. (See the example below for supported options).
 ```
 ./gorss -config my.conf
 ```
@@ -71,10 +75,10 @@ It's possible to specify configuration file as a flag, default is `gorss.conf`.
     "OPMLFile": "../example_ompl.xml",
     "feeds": [
         "https://news.ycombinator.com/rss",
-        "https://www.sweclockers.com/feeds/nyheter",
-        "https://www.reddit.com/r/homeassistant/.rss",
-        "https://www.reddit.com/r/golang/.rss",
-        "https://www.reddit.com/r/programming/.rss"
+        ("url": "https://www.sweclockers.com/feeds/nyheter", "name": "Swedish Overclocking"},
+        ("url": "https://www.reddit.com/r/homeassistant/.rss", "name": "Home Assistant"},
+        ("url": "https://www.reddit.com/r/golang/.rss"},
+        {"url": "https://www.reddit.com/r/programming/.rss"}
     ],
     "feedWindowSizeRatio": 2,
     "articlePreviewWindowSizeRatio": 5,
