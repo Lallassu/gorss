@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gilliek/go-opml/opml"
 	"github.com/mmcdole/gofeed"
@@ -37,13 +36,13 @@ func (r *RSS) Init(c *Controller) {
 				for _, o := range b.Outlines {
 					url := r.GetURLFromOPML(o)
 					if url != "" {
-						r.c.conf.Feeds = append(r.c.conf.Feeds, url)
+						r.c.conf.Feeds = append(r.c.conf.Feeds, Feed{URL: url})
 					}
 				}
 			} else {
 				url := r.GetURLFromOPML(b)
 				if url != "" {
-					r.c.conf.Feeds = append(r.c.conf.Feeds, url)
+					r.c.conf.Feeds = append(r.c.conf.Feeds, Feed{URL: url})
 				}
 			}
 		}
@@ -71,21 +70,16 @@ func (r *RSS) Update() {
 		feed        *gofeed.Feed
 	}{}
 	for _, f := range r.c.conf.Feeds {
-		sf := strings.Split(f, "~")
-		feed, err := r.FetchURL(fp, strings.TrimSpace(sf[0]))
+		feed, err := r.FetchURL(fp, f.URL)
 		if err != nil {
-			log.Printf("error fetching url: %s, err: %v", f, err)
+			log.Printf("error fetching url: %s, err: %v", f.URL, err)
 			continue
-		}
-		dname := ""
-		if len(sf) > 1 {
-			dname = strings.TrimSpace(sf[1])
 		}
 		r.feeds = append(r.feeds, struct {
 			displayName string
 			feed        *gofeed.Feed
 		}{
-			dname,
+			f.Name,
 			feed,
 		})
 	}
