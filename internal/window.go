@@ -35,6 +35,13 @@ type Window struct {
 	nFeeds      int
 }
 
+const (
+	// KeyCell -
+	KeyCell = iota
+	// ActionCell -
+	ActionCell
+)
+
 // Init sets up all information regarding widgets
 func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Controller) {
 	w.c = c
@@ -69,13 +76,13 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	ts.SetAlign(tview.AlignLeft)
 	ts.Attributes |= tcell.AttrBold
 	ts.SetSelectable(false)
-	w.help.SetCell(0, 0, ts)
+	w.help.SetCell(0, KeyCell, ts)
 
 	ts = tview.NewTableCell("Action")
 	ts.SetAlign(tview.AlignLeft)
 	ts.Attributes |= tcell.AttrBold
 	ts.SetSelectable(false)
-	w.help.SetCell(0, 1, ts)
+	w.help.SetCell(0, ActionCell, ts)
 
 	i := 1
 	configKeys := c.GetConfigKeys()
@@ -93,14 +100,14 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 		ts.Attributes |= tcell.AttrBold
 		ts.SetSelectable(false)
 		ts.SetTextColor(tcell.GetColor(w.c.theme.StatusKey))
-		w.help.SetCell(i, 0, ts)
+		w.help.SetCell(i, KeyCell, ts)
 
 		ts = tview.NewTableCell(fmt.Sprintf("%s", k))
 		ts.SetAlign(tview.AlignLeft)
 		ts.SetTextColor(tcell.GetColor(w.c.theme.StatusText))
 		ts.Attributes |= tcell.AttrBold
 		ts.SetSelectable(false)
-		w.help.SetCell(i, 1, ts)
+		w.help.SetCell(i, ActionCell, ts)
 	}
 
 	// Preview window
@@ -387,14 +394,14 @@ func (w *Window) ClearFeeds() {
 }
 
 // AddToFeeds add a new feed to the feed window
-func (w *Window) AddToFeeds(name string, unread, total int, ref *Article) {
+func (w *Window) AddToFeeds(name, displayName string, unread, total int, ref *Article) {
 	w.nFeeds++
 
 	color := "white"
 	if len(w.c.conf.Feeds) < len(w.c.theme.FeedNames) {
 		idx := 0
 		for i, f := range w.c.rss.feeds {
-			if f.Title == name {
+			if f.feed.Title == name {
 				idx = i
 				break
 			}
@@ -416,7 +423,11 @@ func (w *Window) AddToFeeds(name string, unread, total int, ref *Article) {
 	nc.SetSelectable(true)
 	nc.SetTextColor(tcell.GetColor(w.c.theme.UnreadColumn))
 
-	nc = tview.NewTableCell(fmt.Sprintf("%s", name))
+	// Display the name of the feed
+	if displayName == "" {
+		displayName = name
+	}
+	nc = tview.NewTableCell(fmt.Sprintf("%s", displayName))
 	nc.SetAlign(tview.AlignLeft)
 	w.feeds.SetCell(w.nFeeds, 2, nc)
 	nc.SetSelectable(true)
@@ -520,7 +531,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	if len(w.c.conf.Feeds) < len(w.c.theme.FeedNames) {
 		idx := 0
 		for i, f := range w.c.rss.feeds {
-			if f.Title == a.feed {
+			if f.feed.Title == a.feed {
 				idx = i
 				break
 			}

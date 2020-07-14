@@ -137,10 +137,10 @@ func (c *Controller) Quit() {
 func (c *Controller) UpdateFeeds() {
 	c.rss.Update()
 	for _, f := range c.rss.feeds {
-		if f == nil {
+		if f.feed == nil {
 			continue
 		}
-		for _, item := range f.Items {
+		for _, item := range f.feed.Items {
 			if item == nil {
 				continue
 			}
@@ -166,13 +166,14 @@ func (c *Controller) UpdateFeeds() {
 				content = item.Content
 			}
 			a := Article{
-				c:         c,
-				feed:      f.Title,
-				title:     item.Title,
-				content:   content,
-				link:      item.Link,
-				published: published,
-				read:      false,
+				c:           c,
+				feed:        f.feed.Title,
+				title:       item.Title,
+				content:     content,
+				link:        item.Link,
+				published:   published,
+				read:        false,
+				feedDisplay: f.displayName,
 			}
 			// Make sure the same article doesn't exists.
 			exists := false
@@ -240,26 +241,30 @@ func (c *Controller) ShowFeeds() {
 			hc++
 		}
 	}
-	c.win.AddToFeeds(fmt.Sprintf("[%s]Highlight", c.theme.Highlights), hc, total, &Article{feed: "highlight"})
+	c.win.AddToFeeds(fmt.Sprintf("[%s]Highlight", c.theme.Highlights), "", hc, total, &Article{feed: "highlight"})
 
-	feeds := make(map[string]int, 0)
+	type feed struct {
+		count   int
+		display string
+	}
+	feeds := make(map[string]*feed, 0)
 	feedsTotal := make(map[string]int, 0)
 	urTotal := 0
 	total = 0
 	for _, a := range c.articles {
 		total++
 		if _, ok := feeds[a.feed]; !ok {
-			feeds[a.feed] = 0
+			feeds[a.feed] = &feed{0, a.feedDisplay}
 			feedsTotal[a.feed] = 0
 		}
 		feedsTotal[a.feed]++
 		if !a.read {
-			feeds[a.feed]++
+			feeds[a.feed].count++
 			urTotal++
 		}
 	}
 
-	c.win.AddToFeeds("Unread", urTotal, urTotal, &Article{feed: "unread"})
+	c.win.AddToFeeds("Unread", "", urTotal, urTotal, &Article{feed: "unread"})
 
 	// If there are no unread left, then we remove the prevArticle so that
 	// we don't add it again when updating the window.
@@ -267,16 +272,18 @@ func (c *Controller) ShowFeeds() {
 		c.prevArticle = nil
 	}
 
-	c.win.AddToFeeds("All Articles", urTotal, total, &Article{feed: "allarticles"})
+	c.win.AddToFeeds("All Articles", "", urTotal, total, &Article{feed: "allarticles"})
 
-	var keys []string
+	var keys [][2]string
 	for k := range feeds {
-		keys = append(keys, k)
+		keys = append(keys, [2]string{k, feeds[k].display})
 	}
-	sort.Strings(keys)
+	sort.SliceStable(keys, func(i, j int) bool {
+		return keys[i][0] < keys[j][0]
+	})
 
 	for _, k := range keys {
-		c.win.AddToFeeds(k, feeds[k], feedsTotal[k], &Article{feed: k})
+		c.win.AddToFeeds(k[0], k[1], feeds[k[0]].count, feedsTotal[k[0]], &Article{feed: k[0]})
 	}
 }
 

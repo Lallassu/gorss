@@ -34,6 +34,7 @@ func (d *DB) Init(c *Controller, dbFile string) error {
 			content text,
 			link text,
 			read bool,
+			display_name string,
 			deleted bool,
 			published DATETIME
 		);`)
@@ -75,7 +76,7 @@ func (d *DB) CleanupDB() {
 
 // All fetches all articles from the database
 func (d *DB) All() []Article {
-	st, err := d.db.Prepare("select id,feed,title,content,published,link,read from articles where deleted = false order by id")
+	st, err := d.db.Prepare("select id,feed,title,content,published,link,read,display_name from articles where deleted = false order by id")
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -96,13 +97,14 @@ func (d *DB) All() []Article {
 		feed      string
 		link      string
 		read      bool
+		display   string
 		published time.Time
 	)
 
 	articles := []Article{}
 
 	for rows.Next() {
-		err = rows.Scan(&id, &feed, &title, &content, &published, &link, &read)
+		err = rows.Scan(&id, &feed, &title, &content, &published, &link, &read, &display)
 		if err != nil {
 			log.Println(err)
 		}
@@ -121,7 +123,7 @@ func (d *DB) All() []Article {
 				break
 			}
 		}
-		articles = append(articles, Article{id: id, highlight: highlight, feed: feed, title: title, content: content, published: published, link: link, read: read})
+		articles = append(articles, Article{id: id, highlight: highlight, feed: feed, title: title, content: content, published: published, link: link, read: read, feedDisplay: display})
 	}
 	return articles
 }
@@ -149,13 +151,13 @@ func (d *DB) Save(a Article) error {
 		log.Println(err)
 	}
 
-	st, err = tx.Prepare("insert into articles(feed, title, content, link, read, published, deleted) values(?, ?, ?, ?, ?,?,?)")
+	st, err = tx.Prepare("insert into articles(feed, title, content, link, read, display_name, published, deleted) values(?, ?, ?, ?, ?, ?, ?,?)")
 	if err != nil {
 		log.Println(err)
 	}
 	defer st.Close()
 
-	if _, err := st.Exec(a.feed, a.title, a.content, a.link, false, a.published, false); err != nil {
+	if _, err := st.Exec(a.feed, a.title, a.content, a.link, false, a.feedDisplay, a.published, false); err != nil {
 		log.Println(err)
 	}
 
