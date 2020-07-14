@@ -2,15 +2,16 @@ package internal
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell"
-	"github.com/rivo/tview"
-	"jaytaylor.com/html2text"
 	"log"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
-  "strconv"
+
+	"github.com/gdamore/tcell"
+	"github.com/rivo/tview"
+	"jaytaylor.com/html2text"
 )
 
 // Window holds all information regarding the Window layout and functionality
@@ -41,12 +42,14 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	w.showPreview = true
 	w.showHelp = false
 
+	// Feeds window
 	w.feeds = tview.NewTable()
 	w.feeds.SetBorder(true)
 	w.feeds.SetBorderPadding(1, 1, 1, 1)
 	w.feeds.SetBorderColor(tcell.GetColor(w.c.theme.FeedBorder))
 	w.feeds.SetTitle(fmt.Sprintf("%s Feeds", w.c.theme.FeedIcon)).SetTitleColor(tcell.GetColor(w.c.theme.FeedBorderTitle))
 
+	// Articles window
 	w.articles = tview.NewTable()
 	w.articles.SetTitleAlign(tview.AlignLeft)
 	w.articles.SetBorder(true)
@@ -54,6 +57,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	w.articles.SetBorderColor(tcell.GetColor(w.c.theme.ArticleBorder))
 	w.articles.SetTitle(fmt.Sprintf("%s Articles", w.c.theme.ArticleIcon)).SetTitleColor(tcell.GetColor(w.c.theme.ArticleBorderTitle))
 
+	// Help window
 	w.help = tview.NewTable()
 	w.help.SetTitleAlign(tview.AlignLeft)
 	w.help.SetBorder(true)
@@ -81,6 +85,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 	}
 	sort.Strings(keys)
 
+	// Populate help window
 	for _, k := range keys {
 		i++
 		ts = tview.NewTableCell(fmt.Sprintf("%s", configKeys[k]))
@@ -98,6 +103,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 		w.help.SetCell(i, 1, ts)
 	}
 
+	// Preview window
 	w.preview = tview.NewTextView()
 	w.preview.SetBorder(true)
 	w.preview.SetBorderPadding(1, 1, 1, 1)
@@ -396,12 +402,14 @@ func (w *Window) AddToFeeds(name string, unread, total int, ref *Article) {
 		color = w.c.theme.FeedNames[idx]
 	}
 
+	// Display total number of articles
 	nc := tview.NewTableCell(fmt.Sprintf("%d", total))
 	nc.SetAlign(tview.AlignLeft)
 	w.feeds.SetCell(w.nFeeds, 0, nc)
 	nc.SetSelectable(true)
 	nc.SetTextColor(tcell.GetColor(w.c.theme.TotalColumn))
 
+	// Display number of unread articles
 	nc = tview.NewTableCell(fmt.Sprintf("%d", unread))
 	nc.SetAlign(tview.AlignLeft)
 	w.feeds.SetCell(w.nFeeds, 1, nc)
@@ -556,7 +564,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	}
 
 	str := time.Since(a.published).Round(time.Minute).String()
-  t := GetTime(str)
+	t := GetTime(str)
 
 	dc := tview.NewTableCell(
 		fmt.Sprintf(
@@ -613,22 +621,22 @@ func (w *Window) AddPreview(a *Article) {
 
 // GetTime returns the timestring formatted as (%h%m < 24 hours < %d)
 func GetTime(ts string) string {
-  d_rex := regexp.MustCompile(`(\d+)h`)
-  d_res := d_rex.FindStringSubmatch(ts)
-  if len(d_res) > 0 {
-    if i, err := strconv.Atoi(d_res[1]); err == nil {
-      if i > 23 {
-        days := i / 24
-        return strconv.Itoa(days) + "d"
-      }
-    }
-  }
+	d_rex := regexp.MustCompile(`(\d+)h`)
+	d_res := d_rex.FindStringSubmatch(ts)
+	if len(d_res) > 0 {
+		if i, err := strconv.Atoi(d_res[1]); err == nil {
+			if i > 23 {
+				days := i / 24
+				return strconv.Itoa(days) + "d"
+			}
+		}
+	}
 
-  rex := regexp.MustCompile(`.*m(.*?)`)
-  res := rex.FindAllStringSubmatch(ts, -1)
-  if len(res) > 0 && res[0] != nil {
-    return string(res[0][0])
-  }
+	rex := regexp.MustCompile(`.*m(.*?)`)
+	res := rex.FindAllStringSubmatch(ts, -1)
+	if len(res) > 0 && res[0] != nil {
+		return string(res[0][0])
+	}
 
-  return "-"
+	return "-"
 }

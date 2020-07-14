@@ -2,8 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell"
-	"github.com/rivo/tview"
 	"log"
 	"os"
 	"os/exec"
@@ -13,6 +11,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gdamore/tcell"
+	"github.com/rivo/tview"
 )
 
 // Controller handles the logic and keep everything together

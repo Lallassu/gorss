@@ -28,9 +28,9 @@ func (d *DB) Init(c *Controller, dbFile string) error {
 
 	_, err = d.db.Exec(`
          create table if not exists articles(
-			id integer not null primary key, 
+			id integer not null primary key,
 			feed text,
-			title text, 
+			title text,
 			content text,
 			link text,
 			read bool,

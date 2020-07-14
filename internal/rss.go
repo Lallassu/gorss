@@ -2,16 +2,21 @@ package internal
 
 import (
 	"fmt"
-	"github.com/gilliek/go-opml/opml"
-	"github.com/mmcdole/gofeed"
 	"log"
 	"net/http"
+	"strings"
+
+	"github.com/gilliek/go-opml/opml"
+	"github.com/mmcdole/gofeed"
 )
 
 // RSS structure for handle parsing of RSS/Atom feeds
 type RSS struct {
-	feeds []*gofeed.Feed
-	c     *Controller
+	feeds []struct {
+		displayName string
+		feed        *gofeed.Feed
+	}
+	c *Controller
 }
 
 // Init reads an feed related configuration
@@ -61,14 +66,28 @@ func (r *RSS) GetURLFromOPML(b opml.Outline) string {
 // Update fetches all articles for all feeds
 func (r *RSS) Update() {
 	fp := gofeed.NewParser()
-	r.feeds = []*gofeed.Feed{}
+	r.feeds = []struct {
+		displayName string
+		feed        *gofeed.Feed
+	}{}
 	for _, f := range r.c.conf.Feeds {
-		feed, err := r.FetchURL(fp, f)
+		sf := strings.Split(f, "~")
+		feed, err := r.FetchURL(fp, strings.TrimSpace(sf[0]))
 		if err != nil {
 			log.Printf("error fetching url: %s, err: %v", f, err)
 			continue
 		}
-		r.feeds = append(r.feeds, feed)
+		dname := ""
+		if len(sf) > 1 {
+			dname = strings.TrimSpace(sf[1])
+		}
+		r.feeds = append(r.feeds, struct {
+			displayName string
+			feed        *gofeed.Feed
+		}{
+			dname,
+			feed,
+		})
 	}
 }
 
@@ -99,7 +118,7 @@ func (r *RSS) FetchURL(fp *gofeed.Parser, url string) (feed *gofeed.Feed, err er
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("Failed to get url %v, %v", resp.StatusCode, resp.Status)
+		return nil, fmt.Errorf("failed to get url %v, %v", resp.StatusCode, resp.Status)
 	}
 
 	return fp.Parse(resp.Body)
