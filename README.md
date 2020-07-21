@@ -75,9 +75,9 @@ and name fields. (See the example below for supported options).
     "OPMLFile": "../example_ompl.xml",
     "feeds": [
         "https://news.ycombinator.com/rss",
-        ("url": "https://www.sweclockers.com/feeds/nyheter", "name": "Swedish Overclocking"},
-        ("url": "https://www.reddit.com/r/homeassistant/.rss", "name": "Home Assistant"},
-        ("url": "https://www.reddit.com/r/golang/.rss"},
+        {"url": "https://www.sweclockers.com/feeds/nyheter", "name": "Swedish Overclocking"},
+        {"url": "https://www.reddit.com/r/homeassistant/.rss", "name": "Home Assistant"},
+        {"url": "https://www.reddit.com/r/golang/.rss"},
         {"url": "https://www.reddit.com/r/programming/.rss"}
     ],
     "feedWindowSizeRatio": 2,
