@@ -446,6 +446,7 @@ func (w *Window) ArticlesHasFocus() bool {
 // MoveDown handles a keypress for moving down in feeds/articles
 func (w *Window) MoveDown() {
 	p := w.app.GetFocus()
+	// Article window
 	if p == w.articles {
 		count := w.articles.GetRowCount()
 		r, _ := w.articles.GetSelection()
@@ -453,12 +454,16 @@ func (w *Window) MoveDown() {
 			w.articles.Select(r+1, 3)
 		}
 	} else if p == w.feeds {
+		// Feed window
 		count := w.feeds.GetRowCount()
 		r, _ := w.feeds.GetSelection()
 		if r < count-1 {
 			w.feeds.Select(r+1, 0)
 		}
+		// Set selected article to first article in feed
+		w.articles.Select(0, 3)
 	} else if p == w.preview {
+		// Preview window
 		r, _ := w.preview.GetScrollOffset()
 		w.preview.ScrollTo(r+1, 0)
 	}
