@@ -485,6 +485,11 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 			}
 			c.ShowArticles(c.activeFeed)
 			c.ShowFeeds()
+			count := c.win.articles.GetRowCount()
+			r, _ := c.win.articles.GetSelection()
+			if r < count-1 {
+				c.win.articles.Select(r, 3)
+			}
 		}
 
 	case c.conf.KeyMoveDown, "Down":
