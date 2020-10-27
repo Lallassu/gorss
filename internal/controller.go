@@ -18,20 +18,21 @@ import (
 
 // Controller handles the logic and keep everything together
 type Controller struct {
-	rss         *RSS
-	db          *DB
-	win         *Window
-	activeFeed  string
-	linksToOpen []string
-	quit        chan int
-	articles    []Article
-	aLock       sync.Mutex
-	conf        Config
-	theme       Theme
-	isUpdated   bool
-	prevArticle *Article
-	undoArticle *Article
-	lastUpdate  time.Time
+	rss           *RSS
+	db            *DB
+	win           *Window
+	activeFeed    string
+	linksToOpen   []string
+	quit          chan int
+	articles      []Article
+	aLock         sync.Mutex
+	conf          Config
+	theme         Theme
+	isUpdated     bool
+	prevArticle   *Article
+	undoArticle   *Article
+	lastUpdate    time.Time
+	searchResults int
 }
 
 // Init initiates the controller with database handles etc.
@@ -102,7 +103,7 @@ func (c *Controller) GetConfigKeys() map[string]string {
 // UpdateLoop updates the feeds and windows
 func (c *Controller) UpdateLoop() {
 	c.GetArticlesFromDB()
-	c.UpdateFeeds() // Start by updating feeds.
+	go c.UpdateFeeds() // Start by updating feeds.
 	c.ShowFeeds()
 	go func() {
 		updateWin := time.NewTicker(time.Duration(30) * time.Second)
@@ -116,9 +117,11 @@ func (c *Controller) UpdateLoop() {
 				}
 				c.ShowFeeds()
 			case <-updateFeeds.C:
-				c.UpdateFeeds()
-				c.db.CleanupDB()
-				c.win.StatusUpdate()
+				go func() {
+					c.UpdateFeeds()
+					c.db.CleanupDB()
+					c.win.StatusUpdate()
+				}()
 			case <-c.quit:
 				c.Quit()
 				return
@@ -242,6 +245,7 @@ func (c *Controller) ShowFeeds() {
 		}
 	}
 	c.win.AddToFeeds(fmt.Sprintf("[%s]Highlight", c.theme.Highlights), "", hc, total, &Article{feed: "highlight"})
+	c.win.AddToFeeds(fmt.Sprintf("[%s]Search Results", c.theme.Highlights), "", c.searchResults, c.searchResults, &Article{feed: "result"})
 
 	type feed struct {
 		count   int
@@ -295,6 +299,8 @@ func (c *Controller) ShowArticles(feed string) {
 
 	if feed == "" {
 		feed = "highlight"
+	} else if feed == "result" {
+		c.searchResults = 0
 	}
 
 	c.activeFeed = feed
@@ -302,6 +308,19 @@ func (c *Controller) ShowArticles(feed string) {
 	for i, a := range c.articles {
 		if feed == "highlight" {
 			if !a.highlight {
+				continue
+			}
+		} else if feed == "result" {
+			match := false
+			for _, f := range strings.Fields(c.win.currSearch) {
+				// Insensitive search
+				if strings.Contains(strings.ToLower(a.title), strings.ToLower(f)) {
+					match = true
+					c.searchResults++
+					break
+				}
+			}
+			if !match {
 				continue
 			}
 		} else if feed == "allarticles" {
@@ -334,6 +353,7 @@ func (c *Controller) ShowArticles(feed string) {
 	c.isUpdated = false
 
 	c.win.articles.ScrollToBeginning()
+	c.ShowFeeds()
 }
 
 // GetArticleForSelection returns the article instance for the selected article
@@ -409,7 +429,6 @@ func (c *Controller) SelectArticle(row, col int) {
 		c.db.MarkRead(c.prevArticle)
 		c.prevArticle.read = true
 	}
-
 }
 
 // Input handles keystrokes
@@ -420,8 +439,11 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch keyName {
+	case c.conf.KeySearchPromt:
+		c.win.Search()
+
 	case c.conf.KeyQuit:
-		c.quit <- 1
+		c.win.AskQuit()
 
 	case c.conf.KeySwitchWindows:
 		c.win.SwitchFocus()
@@ -452,7 +474,7 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 			// Remove the linkmarker icon
 			r, _ := c.win.articles.GetSelection()
 			cell := c.win.articles.GetCell(r, 1)
-			cell.SetText(fmt.Sprintf("%s", c.theme.UnreadMarker))
+			cell.SetText(c.theme.UnreadMarker)
 		}
 		if c.activeFeed != "unread" {
 			c.ShowArticles(c.activeFeed)

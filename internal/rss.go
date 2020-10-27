@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gilliek/go-opml/opml"
 	"github.com/mmcdole/gofeed"
@@ -69,20 +70,32 @@ func (r *RSS) Update() {
 		displayName string
 		feed        *gofeed.Feed
 	}{}
+
+	var mu sync.Mutex
+
+	var wg sync.WaitGroup
+
 	for _, f := range r.c.conf.Feeds {
-		feed, err := r.FetchURL(fp, f.URL)
-		if err != nil {
-			log.Printf("error fetching url: %s, err: %v", f.URL, err)
-			continue
-		}
-		r.feeds = append(r.feeds, struct {
-			displayName string
-			feed        *gofeed.Feed
-		}{
-			f.Name,
-			feed,
-		})
+		wg.Add(1)
+		go func(f Feed) {
+			feed, err := r.FetchURL(fp, f.URL)
+			if err != nil {
+				log.Printf("error fetching url: %s, err: %v", f.URL, err)
+			} else {
+				mu.Lock()
+				r.feeds = append(r.feeds, struct {
+					displayName string
+					feed        *gofeed.Feed
+				}{
+					f.Name,
+					feed,
+				})
+				mu.Unlock()
+			}
+			wg.Done()
+		}(f)
 	}
+	wg.Wait()
 }
 
 // FetchURL fetches the feed URL and also fakes the user-agent to be able
