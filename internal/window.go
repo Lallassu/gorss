@@ -33,6 +33,8 @@ type Window struct {
 	showHelp    bool
 	nArticles   int
 	nFeeds      int
+	askQuit     bool
+	currSearch  string
 }
 
 const (
@@ -223,8 +225,87 @@ func (w *Window) UpdateStatusTicker() {
 	}()
 }
 
+// Search asks the user to input search query
+func (w *Window) Search() {
+	w.askQuit = true
+	w.flexStatus.RemoveItem(w.status)
+	w.currSearch = ""
+
+	inputField := tview.NewInputField().
+		SetLabel("find: ").
+		SetFieldWidth(20).
+		SetFieldBackgroundColor(tcell.ColorBlack)
+
+	capt := func(e *tcell.EventKey) *tcell.EventKey {
+		keyName := string(e.Name())
+		if strings.Contains(keyName, "Rune") {
+			keyName = string(e.Rune())
+		}
+
+		if strings.EqualFold(keyName, "esc") {
+			w.flexStatus.RemoveItem(inputField)
+			w.flexStatus.AddItem(w.status, 1, 1, false)
+			w.app.SetInputCapture(w.c.Input)
+			w.app.SetFocus(w.articles)
+		}
+
+		if strings.EqualFold(keyName, "enter") {
+			w.flexStatus.RemoveItem(inputField)
+			w.flexStatus.AddItem(w.status, 1, 1, false)
+			w.app.SetInputCapture(w.c.Input)
+			w.app.SetFocus(w.articles)
+
+			w.feeds.Select(2, 0)
+			w.articles.Select(0, 3)
+
+		} else {
+			w.currSearch += keyName
+		}
+
+		return e
+	}
+	w.flexStatus.AddItem(inputField, 1, 0, false)
+	w.app.SetFocus(inputField)
+	w.app.SetInputCapture(capt)
+}
+
+// AskQuit asks the user to quit or not.
+func (w *Window) AskQuit() {
+	w.askQuit = true
+	w.flexStatus.RemoveItem(w.status)
+
+	inputField := tview.NewInputField().
+		SetLabel("Quit [Y/n]? ").
+		SetFieldWidth(5).
+		SetFieldBackgroundColor(tcell.ColorBlack)
+
+	x := func(e *tcell.EventKey) *tcell.EventKey {
+		keyName := string(e.Name())
+		if strings.Contains(keyName, "Rune") {
+			keyName = string(e.Rune())
+		}
+
+		if strings.EqualFold(keyName, "y") || strings.EqualFold(keyName, "enter") {
+			w.c.quit <- 1
+		}
+
+		w.flexStatus.RemoveItem(inputField)
+		w.flexStatus.AddItem(w.status, 1, 1, false)
+		w.app.SetInputCapture(w.c.Input)
+		w.app.SetFocus(w.articles)
+
+		return e
+	}
+	w.flexStatus.AddItem(inputField, 1, 0, false)
+	w.app.SetFocus(inputField)
+	w.app.SetInputCapture(x)
+}
+
 // StatusUpdate updates the status window with updated information
 func (w *Window) StatusUpdate() {
+	if w.askQuit {
+		return
+	}
 	// Update time
 	c := w.status.GetCell(0, 0)
 	c.SetText(
@@ -557,12 +638,12 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	tc.SetReference(a)
 	w.articles.SetCell(w.nArticles, 3, tc)
 
-	if a.highlight {
+	if w.c.activeFeed == "result" {
 		hTitle := ""
 		fields := strings.Fields(a.title)
 		for _, f := range fields {
 			found := false
-			for _, h := range w.c.conf.Highlights {
+			for _, h := range strings.Fields(w.currSearch) {
 				if strings.Contains(strings.ToLower(f), strings.ToLower(h)) {
 					found = true
 				}
@@ -575,8 +656,26 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 		}
 		tc.SetText(hTitle)
 	} else {
-		tc.SetText(a.title)
-
+		if a.highlight {
+			hTitle := ""
+			fields := strings.Fields(a.title)
+			for _, f := range fields {
+				found := false
+				for _, h := range w.c.conf.Highlights {
+					if strings.Contains(strings.ToLower(f), strings.ToLower(h)) {
+						found = true
+					}
+				}
+				if found {
+					hTitle += fmt.Sprintf("[%s]"+f+" [%s]", w.c.theme.Highlights, w.c.theme.Title)
+				} else {
+					hTitle += f + " "
+				}
+			}
+			tc.SetText(hTitle)
+		} else {
+			tc.SetText(a.title)
+		}
 	}
 
 	str := time.Since(a.published).Round(time.Minute).String()
@@ -637,10 +736,10 @@ func (w *Window) AddPreview(a *Article) {
 
 // GetTime returns the timestring formatted as (%h%m < 24 hours < %d)
 func GetTime(ts string) string {
-	d_rex := regexp.MustCompile(`(\d+)h`)
-	d_res := d_rex.FindStringSubmatch(ts)
-	if len(d_res) > 0 {
-		if i, err := strconv.Atoi(d_res[1]); err == nil {
+	dDrex := regexp.MustCompile(`(\d+)h`)
+	dRes := dDrex.FindStringSubmatch(ts)
+	if len(dRes) > 0 {
+		if i, err := strconv.Atoi(dRes[1]); err == nil {
 			if i > 23 {
 				days := i / 24
 				return strconv.Itoa(days) + "d"
