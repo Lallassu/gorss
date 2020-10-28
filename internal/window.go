@@ -525,16 +525,15 @@ func (w *Window) ArticlesHasFocus() bool {
 }
 
 // MoveDown handles a keypress for moving down in feeds/articles
-func (w *Window) MoveDown() {
-	p := w.app.GetFocus()
+func (w *Window) MoveDown(focus tview.Primitive) {
 	// Article window
-	if p == w.articles {
+	if focus == w.articles {
 		count := w.articles.GetRowCount()
 		r, _ := w.articles.GetSelection()
 		if r < count-1 {
 			w.articles.Select(r+1, 3)
 		}
-	} else if p == w.feeds {
+	} else if focus == w.feeds {
 		// Feed window
 		count := w.feeds.GetRowCount()
 		r, _ := w.feeds.GetSelection()
@@ -543,7 +542,7 @@ func (w *Window) MoveDown() {
 		}
 		// Set selected article to first article in feed
 		w.articles.Select(0, 3)
-	} else if p == w.preview {
+	} else if focus == w.preview {
 		// Preview window
 		r, _ := w.preview.GetScrollOffset()
 		w.preview.ScrollTo(r+1, 0)
@@ -551,19 +550,18 @@ func (w *Window) MoveDown() {
 }
 
 // MoveUp handles a keypress for moving up in feeds/articles
-func (w *Window) MoveUp() {
-	p := w.app.GetFocus()
-	if p == w.articles {
+func (w *Window) MoveUp(focus tview.Primitive) {
+	if focus == w.articles {
 		r, _ := w.articles.GetSelection()
 		if r > 1 {
 			w.articles.Select(r-1, 3)
 		}
-	} else if p == w.feeds {
+	} else if focus == w.feeds {
 		r, _ := w.feeds.GetSelection()
 		if r > 1 {
 			w.feeds.Select(r-1, 0)
 		}
-	} else if p == w.preview {
+	} else if focus == w.preview {
 		r, _ := w.preview.GetScrollOffset()
 		w.preview.ScrollTo(r-1, 0)
 	}

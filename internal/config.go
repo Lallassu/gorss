@@ -29,6 +29,8 @@ type Config struct {
 	KeyDeleteArticle              string        `json:"keyDeleteArticle"`
 	KeyMoveDown                   string        `json:"keyMoveDown"`
 	KeyMoveUp                     string        `json:"keyMoveUp"`
+	KeyFeedDown                   string        `json:"keyFeedDown"`
+	KeyFeedUp                     string        `json:"keyFeedUp"`
 	KeySortByDate                 string        `json:"keySortByDate"`
 	KeySortByTitle                string        `json:"keySortByTitle"`
 	KeySortByUnread               string        `json:"keySortByUnread"`
