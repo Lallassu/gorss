@@ -1,4 +1,4 @@
-all: build release clean
+all: build
 
 VERSION=`git tag |tail -n1`
 build:
