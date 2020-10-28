@@ -518,10 +518,16 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 		if c.activeFeed == "unread" {
 			c.win.articles.Select(0, 3)
 		}
-		c.win.MoveDown()
+		c.win.MoveDown(c.win.app.GetFocus())
 
 	case c.conf.KeyMoveUp, "Up":
-		c.win.MoveUp()
+		c.win.MoveUp(c.win.app.GetFocus())
+
+	case c.conf.KeyFeedDown:
+		c.win.MoveDown(c.win.feeds)
+
+	case c.conf.KeyFeedUp:
+		c.win.MoveUp(c.win.feeds)
 
 	case c.conf.KeySortByFeed:
 		sort.Slice(c.articles, func(i, j int) bool {
