@@ -591,8 +591,12 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 		c.win.ToggleHelp()
 
 	case c.conf.KeyUndoLastRead:
-		c.undoArticle.read = false
-		c.prevArticle.read = false
+		if c.undoArticle != nil {
+			c.undoArticle.read = false
+		}
+		if c.prevArticle != nil {
+			c.prevArticle.read = false
+		}
 		c.prevArticle = c.undoArticle
 		c.ShowArticles(c.activeFeed)
 		c.win.articles.Select(1, 3)
