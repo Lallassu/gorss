@@ -217,6 +217,15 @@ func (c *Controller) GetArticlesFromDB() {
 func (c *Controller) OpenLink(link string) {
 	var err error
 
+	browser := c.conf.WebBrowser
+	if browser != "" {
+		if err = exec.Command(browser, link).Start(); err != nil {
+			log.Println("unable to open %s on %s: %v", link, browser, err)
+		}
+
+		return
+	}
+
 	switch runtime.GOOS {
 	case "linux":
 		err = exec.Command("xdg-open", link).Start()
