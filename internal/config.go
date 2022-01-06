@@ -47,7 +47,12 @@ type Config struct {
 	KeyQuit                       string        `json:"keyQuit"`
 	KeyUndoLastRead               string        `json:"keyUndoLastRead"`
 	KeySearchPromt                string        `json:"keySearchPromt"`
-	CustomCommands                []Command     `json:"customCommands"`
+	// WebBrowser overrides the default program used to open links. Default one depends on the OS:
+	// * `xdg-open` for Linux
+	// * `url.dll,FileProtocolHandler` for Windows
+	// * `open` for Darwin
+	WebBrowser     string    `json:"webBrowser"`
+	CustomCommands []Command `json:"customCommands"`
 }
 
 // Feed -
