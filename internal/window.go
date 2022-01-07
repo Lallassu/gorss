@@ -203,7 +203,7 @@ func (w *Window) ToggleHelp() {
 // TogglePreview shows/hides the preview window for an article
 func (w *Window) TogglePreview() {
 	if !w.showPreview {
-		w.flexMiddle = w.flexMiddle.AddItem(w.preview, 0, 1, false)
+		w.flexMiddle = w.flexMiddle.AddItem(w.preview, 0, w.c.conf.PreviewWindowSizeRatio, false)
 		w.showPreview = true
 	} else {
 		w.flexMiddle = w.flexMiddle.RemoveItem(w.preview)
