@@ -7,6 +7,8 @@ build:
 run: build
 	@./gorss
 	
+install: build
+	@go install ./cmd/...
 
 release:
 	@mkdir release
