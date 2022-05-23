@@ -55,6 +55,8 @@ func main() {
 		s := conf.QueryConfig(defaultConfig)
 		if s != "" {
 			cfg = s
+		} else {
+			cfg = fmt.Sprintf("%s/%s", configHome, defaultConfig)
 		}
 	}
 
@@ -63,6 +65,8 @@ func main() {
 		s := conf.QueryConfig(defaultTheme)
 		if s != "" {
 			theme = s
+		} else {
+			theme = fmt.Sprintf("%s/%s", configHome, defaultTheme)
 		}
 	}
 
