@@ -80,7 +80,7 @@ func main() {
                             if err := os.Mkdir(themeDir, os.ModePerm); err != nil {
                                 log.Printf("Failed to create dir: %s\n", themeDir)
                             }
-                            internal.Copy(defaultTheme, theme)
+                            internal.CopyFile(defaultTheme, theme)
                         }
 		}
 	}
