@@ -1,7 +1,7 @@
 package main
 
 import (
-        "errors"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -58,11 +58,11 @@ func main() {
 			cfg = s
 		} else {
 			cfg = fmt.Sprintf("%s/%s", configHome, defaultConfig)
-                        // check if default config exists, copy if not
-                        _, err := os.Stat(cfg)
-                        if errors.Is(err, os.ErrNotExist) {
-                            internal.CopyFile(defaultConfig, cfg)
-                        }
+			// check if default config exists, copy if not
+			_, err := os.Stat(cfg)
+			if errors.Is(err, os.ErrNotExist) {
+				internal.CopyFile(defaultConfig, cfg)
+			}
 		}
 	}
 
@@ -73,15 +73,15 @@ func main() {
 			theme = s
 		} else {
 			theme = fmt.Sprintf("%s/%s", configHome, defaultTheme)
-                        // check if default config exists, copy if not
-                        _, err := os.Stat(theme)
-                        if errors.Is(err, os.ErrNotExist) {
-                            themeDir := fmt.Sprintf("%s/%s", configHome, "themes")
-                            if err := os.Mkdir(themeDir, os.ModePerm); err != nil {
-                                log.Printf("Failed to create dir: %s\n", themeDir)
-                            }
-                            internal.CopyFile(defaultTheme, theme)
-                        }
+			// check if default config exists, copy if not
+			_, err := os.Stat(theme)
+			if errors.Is(err, os.ErrNotExist) {
+				themeDir := fmt.Sprintf("%s/%s", configHome, "themes")
+				if err := os.Mkdir(themeDir, os.ModePerm); err != nil {
+					log.Printf("Failed to create dir: %s\n", themeDir)
+				}
+				internal.CopyFile(defaultTheme, theme)
+			}
 		}
 	}
 
