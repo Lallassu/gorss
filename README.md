@@ -20,8 +20,10 @@ You can also specify theme, configuration and database manually.
 ./gorss -config gorss.conf -theme default.theme -db mydb.db
 ```
 
-Gorss expect to have `gorss.conf` and `default.theme` in the same directory as `gorss` itself if not
-starting it with parameters as above.
+If either the configuration or theme files are not specified, gorss will attempt
+to use`$XDG_CONFIG_HOME/gorss/gorss.conf` and
+`$XDG_CONFIG_HOME/gorss/themes/default.theme`, respectively.  These files will be
+created from the defaults if not present.
 
 To build and run use the makefile.
 ```
