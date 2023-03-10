@@ -54,6 +54,7 @@ to use with the argument `-db` to the binary.
 - Mark all as read/unread
 - Undo last read (mark it as unread)
 - Search titles
+- System notifications
 
 ## Configuration Example (Default config)
 It's possible to specify configuration file as a flag, default is `gorss.conf`.
@@ -114,12 +115,13 @@ and name fields. (See the example below for supported options).
     "keyQuit": "Esc",
     "keyUndoLastRead": "u",
     "keySearchPromt": "/",
+    "notifications": true,
     "customCommands": [
-        { 
+        {
             "key": "j",
             "Cmd": "echo 'ARTICLE.Content' 'ARTICLE.Link' > /tmp/test2.txt"
         },
-        { 
+        {
             "key": "k",
             "Cmd": "echo 'ARTICLE.Title' 'ARTICLE.Feed' > /tmp/test.txt"
         }
