@@ -53,6 +53,7 @@ type Config struct {
 	// * `open` for Darwin
 	WebBrowser     string    `json:"webBrowser"`
 	CustomCommands []Command `json:"customCommands"`
+	Notifications  bool      `json:notifications"`
 }
 
 // Feed -

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
+	"github.com/gen2brain/beeep"
 	"github.com/rivo/tview"
 )
 
@@ -139,6 +140,7 @@ func (c *Controller) Quit() {
 // UpdateFeeds updates the articles kept in the controller
 func (c *Controller) UpdateFeeds() {
 	c.rss.Update()
+	news := make(map[string]int)
 	for _, f := range c.rss.feeds {
 		if f.feed == nil {
 			continue
@@ -187,10 +189,36 @@ func (c *Controller) UpdateFeeds() {
 			}
 
 			if !exists {
+				if f.displayName != "" {
+					news[f.displayName]++
+				} else {
+					news[f.feed.Title]++
+				}
 				c.db.Save(a)
 			}
 		}
 	}
+
+	if c.conf.Notifications {
+		// skip error handling, best effort to show notifications.
+		newArticles := ""
+		total := 0
+		for k, v := range news {
+			if v > 0 {
+				newArticles += fmt.Sprintf("[%d] %s\n", v, k)
+				total += v
+			}
+		}
+
+		if total > 0 {
+			articles := "Articles"
+			if total == 1 {
+				articles = "Article"
+			}
+			beeep.Notify(fmt.Sprintf("%s GORSS: %d New %s", c.theme.PreviewIcon, total, articles), newArticles, "")
+		}
+	}
+
 	c.lastUpdate = time.Now()
 	c.GetArticlesFromDB()
 	c.isUpdated = true
@@ -220,9 +248,8 @@ func (c *Controller) OpenLink(link string) {
 	browser := c.conf.WebBrowser
 	if browser != "" {
 		if err = exec.Command(browser, link).Start(); err != nil {
-			log.Println("unable to open %s on %s: %v", link, browser, err)
+			log.Printf("unable to open %s on %s: %v\n", link, browser, err)
 		}
-
 		return
 	}
 
