@@ -106,6 +106,8 @@ and name fields. (See the example below for supported options).
     "keyUpdateFeeds": "Ctrl+U",
     "keyMarkAllRead": "Ctrl+R",
     "keyMarkAllUnread": "Ctrl+T",
+    "keyMarkAllReadFeed": "Ctrl+F",
+    "keyMarkAllUnreadFeed": "Ctrl+G",
     "keyTogglePreview": "q",
     "keySelectFeedWindow": "1",
     "keySelectArticleWindow": "2",
