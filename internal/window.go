@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gdamore/tcell"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"jaytaylor.com/html2text"
 )
@@ -402,7 +402,7 @@ func (w *Window) StatusUpdate() {
 		),
 	)
 
-	w.app.Draw()
+	go w.app.Draw()
 }
 
 // ClearPreview clears the preview window
@@ -418,28 +418,27 @@ func (w *Window) ClearArticles() {
 	ts := tview.NewTableCell("")
 	ts.SetAlign(tview.AlignLeft)
 	ts.Attributes |= tcell.AttrBold
-	//	ts.SetTextColor(tcell.ColorGreen)
 	ts.SetSelectable(false)
-	w.articles.SetCell(0, 1, ts)
+	w.articles.SetCell(0, 0, ts)
 
 	ts = tview.NewTableCell("Feed")
 	ts.SetAlign(tview.AlignLeft)
 	ts.Attributes |= tcell.AttrBold
 	ts.SetTextColor(tcell.GetColor(w.c.theme.TableHead))
 	ts.SetSelectable(false)
-	w.articles.SetCell(0, 2, ts)
+	w.articles.SetCell(0, 1, ts)
 
 	ts = tview.NewTableCell("Title")
 	ts.Attributes |= tcell.AttrBold
 	ts.SetTextColor(tcell.GetColor(w.c.theme.TableHead))
 	ts.SetSelectable(false)
-	w.articles.SetCell(0, 3, ts)
+	w.articles.SetCell(0, 2, ts)
 
 	ts = tview.NewTableCell("Published")
 	ts.Attributes |= tcell.AttrBold
 	ts.SetTextColor(tcell.GetColor(w.c.theme.TableHead))
 	ts.SetSelectable(false)
-	w.articles.SetCell(0, 5, ts)
+	w.articles.SetCell(0, 3, ts)
 
 	w.articles.SetSelectable(true, false)
 }
@@ -530,6 +529,11 @@ func (w *Window) MoveDown(focus tview.Primitive) {
 	if focus == w.articles {
 		count := w.articles.GetRowCount()
 		r, _ := w.articles.GetSelection()
+		a := w.c.GetArticleForSelection()
+		if r == 1 {
+			w.c.db.MarkRead(a)
+			a.read = true
+		}
 		if r < count-1 {
 			w.articles.Select(r+1, 3)
 		}
@@ -607,7 +611,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 
 	nc := tview.NewTableCell("")
 	nc.SetAlign(tview.AlignLeft)
-	w.articles.SetCell(w.nArticles, 1, nc)
+	w.articles.SetCell(w.nArticles, 0, nc)
 	nc.SetSelectable(false)
 
 	// Create different color per feed name
@@ -626,7 +630,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	fc.SetTextColor(tcell.GetColor(color))
 	fc.SetAlign(tview.AlignLeft)
 	fc.SetMaxWidth(20)
-	w.articles.SetCell(w.nArticles, 2, fc)
+	w.articles.SetCell(w.nArticles, 1, fc)
 
 	tc := tview.NewTableCell("")
 	tc.SetTextColor(tcell.GetColor(w.c.theme.Title))
@@ -634,7 +638,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	tc.SetMaxWidth(80)
 	tc.SetAlign(tview.AlignLeft)
 	tc.SetReference(a)
-	w.articles.SetCell(w.nArticles, 3, tc)
+	w.articles.SetCell(w.nArticles, 2, tc)
 
 	if w.c.activeFeed == "result" {
 		hTitle := ""
@@ -690,7 +694,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	)
 	dc.SetTextColor(tcell.GetColor(w.c.theme.Date))
 	dc.SetAlign(tview.AlignLeft)
-	w.articles.SetCell(w.nArticles, 5, dc)
+	w.articles.SetCell(w.nArticles, 3, dc)
 
 	ncText := ""
 	if markedWeb {

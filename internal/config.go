@@ -37,7 +37,9 @@ type Config struct {
 	KeySortByFeed                 string        `json:"keySortByFeed"`
 	KeyUpdateFeeds                string        `json:"keyUpdateFeeds"`
 	KeyMarkAllRead                string        `json:"keyMarkAllRead"`
+	KeyMarkAllReadFeed            string        `json:"keyMarkAllReadFeed"`
 	KeyMarkAllUnread              string        `json:"keyMarkAllUnread"`
+	KeyMarkAllUnreadFeed          string        `json:"keyMarkAllUnreadFeed"`
 	KeyTogglePreview              string        `json:"keyTogglePreview"`
 	KeySelectFeedWindow           string        `json:"keySelectFeedWindow"`
 	KeySelectArticleWindow        string        `json:"keySelectArticleWindow"`
@@ -53,7 +55,7 @@ type Config struct {
 	// * `open` for Darwin
 	WebBrowser     string    `json:"webBrowser"`
 	CustomCommands []Command `json:"customCommands"`
-	Notifications  bool      `json:notifications"`
+	Notifications  bool      `json:"notifications"`
 }
 
 // Feed -

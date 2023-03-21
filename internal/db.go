@@ -207,27 +207,49 @@ func (d *DB) MarkUnread(a Article) error {
 }
 
 // MarkAllRead marks all articles in the database as read
-func (d *DB) MarkAllRead() {
-	st, err := d.db.Prepare("update articles set read = true")
+func (d *DB) MarkAllRead(feed string) {
+	stmt := "update articles set read = true"
+	if feed != "" {
+		stmt = "update articles set read = true where feed = ?"
+	}
+
+	st, err := d.db.Prepare(stmt)
 	if err != nil {
 		log.Println(err)
 	}
 	defer st.Close()
 
-	if _, err := st.Exec(); err != nil {
-		log.Println(err)
+	if feed != "" {
+		if _, err := st.Exec(feed); err != nil {
+			log.Println(err)
+		}
+	} else {
+		if _, err := st.Exec(); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
 // MarkAllUnread marks all articles in the database as not read
-func (d *DB) MarkAllUnread() {
-	st, err := d.db.Prepare("update articles set read = false")
+func (d *DB) MarkAllUnread(feed string) {
+	stmt := "update articles set read = false"
+	if feed != "" {
+		stmt = "update articles set read = false where feed = ?"
+	}
+
+	st, err := d.db.Prepare(stmt)
 	if err != nil {
 		log.Println(err)
 	}
 	defer st.Close()
 
-	if _, err := st.Exec(); err != nil {
-		log.Println(err)
+	if feed != "" {
+		if _, err := st.Exec(feed); err != nil {
+			log.Println(err)
+		}
+	} else {
+		if _, err := st.Exec(); err != nil {
+			log.Println(err)
+		}
 	}
 }
