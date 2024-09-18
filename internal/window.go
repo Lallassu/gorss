@@ -530,6 +530,11 @@ func (w *Window) MoveDown(focus tview.Primitive) {
 		count := w.articles.GetRowCount()
 		r, _ := w.articles.GetSelection()
 		a := w.c.GetArticleForSelection()
+
+		if a == nil {
+			return
+		}
+
 		if r == 1 {
 			w.c.db.MarkRead(a)
 			a.read = true
