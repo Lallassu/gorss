@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os/user"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gilliek/go-opml/opml"
@@ -25,7 +28,15 @@ func (r *RSS) Init(c *Controller) {
 
 	// Check if we have any OMPL file to load
 	if r.c.conf.OPMLFile != "" {
-		doc, err := opml.NewOPMLFromFile(r.c.conf.OPMLFile)
+		opmlpath := r.c.conf.OPMLFile
+		// if the path contains ~
+		if strings.HasPrefix(opmlpath, "~/") {
+			usr, _ := user.Current()
+			homedir := usr.HomeDir
+			opmlpath = strings.Replace(opmlpath, "~/", "", 1)
+			opmlpath = filepath.Join(homedir, opmlpath)
+		}
+		doc, err := opml.NewOPMLFromFile(opmlpath)
 		if err != nil {
 			log.Printf("Failed to load OPML file, %v", err)
 			return
@@ -110,7 +121,6 @@ func (r *RSS) FetchURL(fp *gofeed.Parser, url string) (feed *gofeed.Feed, err er
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36")
 	resp, err := client.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
