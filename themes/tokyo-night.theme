@@ -1,0 +1,33 @@
+{
+	"feedNames": [
+		"#7aa2f7",
+		"#bb9af7",
+		"#7dcfff",
+		"#9ece6a"
+	],
+	"date": "#ff9e64",
+	"time": "#e0af68",
+	"articleBorder": "#3b4261",
+	"previewBorder": "#3b4261",
+	"feedBorder": "#3b4261",
+	"feedBorderTitle": "#c0caf5",
+	"articleBorderTitle": "#c0caf5",
+	"previewBorderTitle": "#c0caf5",
+	"highlights": "#f7768e",
+	"tableHead": "#7aa2f7",
+	"title": "#c0caf5",
+	"unreadFeedName": "#a9b1d6",
+	"totalColumn": "#bb9af7",
+	"unreadColumn": "#f7768e",
+	"previewText": "#a9b1d6",
+	"previewLink": "#7dcfff",
+	"statusBackground": "#24283b",
+	"statusText": "#c0caf5",
+	"statusKey": "#e0af68",
+	"statusBrackets": "#565f89",
+	"feedIcon": "🌸",
+	"articleIcon": "📰",
+	"previewIcon": "🌙",
+	"linkMarker": "🔗",
+	"unreadMarker": "💫"
+}

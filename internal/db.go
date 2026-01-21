@@ -180,6 +180,9 @@ func (d *DB) Delete(a *Article) {
 
 // MarkRead marks an article as read in the database
 func (d *DB) MarkRead(a *Article) error {
+	if a == nil {
+		return nil
+	}
 	st, err := d.db.Prepare("update articles set read = true where id = ?")
 	if err != nil {
 		log.Println(err)
