@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -19,21 +20,23 @@ import (
 
 // Controller handles the logic and keep everything together
 type Controller struct {
-	rss           *RSS
-	db            *DB
-	win           *Window
-	activeFeed    string
-	linksToOpen   []string
-	quit          chan int
-	articles      []Article
-	aLock         sync.Mutex
-	conf          Config
-	theme         Theme
-	isUpdated     bool
-	prevArticle   *Article
-	undoArticle   *Article
-	lastUpdate    time.Time
-	searchResults int
+	rss             *RSS
+	db              *DB
+	win             *Window
+	activeFeed      string
+	linksToOpen     []string
+	quit            chan int
+	articles        []Article
+	aLock           sync.Mutex
+	conf            Config
+	theme           Theme
+	isUpdated       bool
+	prevArticle     *Article
+	undoArticle     *Article
+	lastUpdate      time.Time
+	searchResults   int
+	availableThemes []string
+	currentThemeIdx int
 }
 
 // Init initiates the controller with database handles etc.
@@ -43,6 +46,16 @@ func (c *Controller) Init(cfg, theme, db string) {
 
 	c.conf = LoadConfiguration(cfg)
 	c.theme = LoadTheme(theme)
+
+	c.availableThemes = GetAvailableThemes()
+	c.currentThemeIdx = 0
+	themeName := strings.TrimSuffix(filepath.Base(theme), ".theme")
+	for i, t := range c.availableThemes {
+		if t == themeName {
+			c.currentThemeIdx = i
+			break
+		}
+	}
 
 	c.articles = make([]Article, 0)
 
@@ -84,6 +97,8 @@ func (c *Controller) GetConfigKeys() map[string]string {
 	keys["Sort by title"] = c.conf.KeySortByTitle
 	keys["Sort by unread"] = c.conf.KeySortByUnread
 	keys["Toggle Preview"] = c.conf.KeyTogglePreview
+	keys["Toggle Feeds"] = c.conf.KeyToggleFeeds
+	keys["Cycle Theme"] = c.conf.KeyCycleTheme
 	keys["Mark All Read"] = c.conf.KeyMarkAllRead
 	keys["Mark All UnRead"] = c.conf.KeyMarkAllUnread
 	keys["Toggle Help"] = "h"
@@ -137,6 +152,20 @@ func (c *Controller) UpdateLoop() {
 func (c *Controller) Quit() {
 	c.win.app.Stop()
 	os.Exit(0)
+}
+
+// CycleTheme switches to the next available theme
+func (c *Controller) CycleTheme() {
+	if len(c.availableThemes) == 0 {
+		return
+	}
+
+	c.currentThemeIdx = (c.currentThemeIdx + 1) % len(c.availableThemes)
+	themeName := c.availableThemes[c.currentThemeIdx]
+
+	c.theme = LoadEmbeddedTheme(themeName)
+
+	c.win.UpdateTheme(&c.theme)
 }
 
 // UpdateFeeds updates the articles kept in the controller
@@ -409,6 +438,9 @@ func (c *Controller) GetArticleForSelection() *Article {
 		r, _ := c.win.articles.GetSelection()
 		cell = c.win.articles.GetCell(r, 2)
 	}
+	if cell == nil {
+		return nil
+	}
 	ref := cell.GetReference()
 	if ref != nil {
 		return ref.(*Article)
@@ -426,6 +458,9 @@ func (c *Controller) SelectFeed(row, col int) {
 	})
 	r, _ := c.win.feeds.GetSelection()
 	cell := c.win.feeds.GetCell(r, 2)
+	if cell == nil {
+		return
+	}
 	ref := cell.GetReference()
 	if ref != nil {
 		c.ShowArticles(ref.(*Article).feed)
@@ -628,6 +663,12 @@ func (c *Controller) Input(e *tcell.EventKey) *tcell.EventKey {
 
 	case c.conf.KeyTogglePreview:
 		c.win.TogglePreview()
+
+	case c.conf.KeyToggleFeeds:
+		c.win.ToggleFeeds()
+
+	case c.conf.KeyCycleTheme:
+		c.CycleTheme()
 
 	case c.conf.KeyUpdateFeeds:
 		c.UpdateFeeds()

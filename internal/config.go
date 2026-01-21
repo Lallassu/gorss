@@ -18,6 +18,7 @@ type Config struct {
 	ArticleWindowSizeRatio        int           `json:"articleWindowSizeRatio"`
 	PreviewWindowSizeRatio        int           `json:"previewWindowSizeRatio"`
 	ArticlePreviewWindowSizeRatio int           `json:"articlePreviewWindowSizeRatio"`
+	FeedNameMaxWidth              int           `json:"feedNameMaxWidth"`
 	SecondsBetweenUpdates         int           `json:"secondsBetweenUpdates"`
 	SkipArticlesOlderThanDays     int           `json:"skipArticlesOlderThanDays"`
 	DaysToKeepDeletedArticlesInDB int           `json:"daysToKeepDeletedArticlesInDB"`
@@ -49,6 +50,9 @@ type Config struct {
 	KeyQuit                       string        `json:"keyQuit"`
 	KeyUndoLastRead               string        `json:"keyUndoLastRead"`
 	KeySearchPromt                string        `json:"keySearchPromt"`
+	KeyToggleFeeds                string        `json:"keyToggleFeeds"`
+	KeyCycleTheme                 string        `json:"keyCycleTheme"`
+	CollapseFeeds                 bool          `json:"collapseFeeds"`
 	// WebBrowser overrides the default program used to open links. Default one depends on the OS:
 	// * `xdg-open` for Linux
 	// * `url.dll,FileProtocolHandler` for Windows

@@ -2,8 +2,10 @@ package internal
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gilliek/go-opml/opml"
@@ -63,6 +65,53 @@ func (r *RSS) GetURLFromOPML(b opml.Outline) string {
 	return str
 }
 
+// replaceHTMLEntities replaces common HTML entities with their numeric character references
+// to prevent XML parsing errors
+func replaceHTMLEntities(content string) string {
+	replacements := map[string]string{
+		"&nbsp;":   "&#160;",
+		"&copy;":   "&#169;",
+		"&reg;":    "&#174;",
+		"&trade;":  "&#8482;",
+		"&mdash;":  "&#8212;",
+		"&ndash;":  "&#8211;",
+		"&hellip;": "&#8230;",
+		"&ldquo;":  "&#8220;",
+		"&rdquo;":  "&#8221;",
+		"&lsquo;":  "&#8216;",
+		"&rsquo;":  "&#8217;",
+		"&middot;": "&#183;",
+		"&bull;":   "&#8226;",
+		"&prime;":  "&#8242;",
+		"&Prime;":  "&#8243;",
+		"&sect;":   "&#167;",
+		"&para;":   "&#182;",
+		"&times;":  "&#215;",
+		"&divide;": "&#247;",
+		"&deg;":    "&#176;",
+		"&plusmn;": "&#177;",
+		"&sup2;":   "&#178;",
+		"&sup3;":   "&#179;",
+		"&frac14;": "&#188;",
+		"&frac12;": "&#189;",
+		"&frac34;": "&#190;",
+		"&euro;":   "&#8364;",
+		"&pound;":  "&#163;",
+		"&yen;":    "&#165;",
+		"&cent;":   "&#162;",
+		"&iexcl;":  "&#161;",
+		"&iquest;": "&#191;",
+		"&laquo;":  "&#171;",
+		"&raquo;":  "&#187;",
+	}
+
+	for entity, replacement := range replacements {
+		content = strings.ReplaceAll(content, entity, replacement)
+	}
+
+	return content
+}
+
 // Update fetches all articles for all feeds
 func (r *RSS) Update() {
 	fp := gofeed.NewParser()
@@ -78,6 +127,12 @@ func (r *RSS) Update() {
 	for _, f := range r.c.conf.Feeds {
 		wg.Add(1)
 		go func(f Feed) {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("panic while fetching url: %s, panic: %v", f.URL, r)
+				}
+				wg.Done()
+			}()
 			feed, err := r.FetchURL(fp, f.URL)
 			if err != nil {
 				log.Printf("error fetching url: %s, err: %v", f.URL, err)
@@ -92,7 +147,6 @@ func (r *RSS) Update() {
 				})
 				mu.Unlock()
 			}
-			wg.Done()
 		}(f)
 	}
 	wg.Wait()
@@ -110,7 +164,6 @@ func (r *RSS) FetchURL(fp *gofeed.Parser, url string) (feed *gofeed.Feed, err er
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36")
 	resp, err := client.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -128,5 +181,13 @@ func (r *RSS) FetchURL(fp *gofeed.Parser, url string) (feed *gofeed.Feed, err er
 		return nil, fmt.Errorf("failed to get url %v, %v", resp.StatusCode, resp.Status)
 	}
 
-	return fp.Parse(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Clean up from common HTML entities (hopefully solving parse issues)
+	cleanedBody := replaceHTMLEntities(string(body))
+
+	return fp.ParseString(cleanedBody)
 }

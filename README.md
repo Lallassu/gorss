@@ -47,7 +47,7 @@ to use with the argument `-db` to the binary.
 - Custom keys for custom execution of external applications
 - Open links in browser
 - Mark articles and open all marked in bulk in webbrowser
-- Theme support
+- 8 Built-in themes with runtime theme switching (press `T` to cycle)
 - Preview content of the RSS
 - Backed by SQLite database
 - Mark articles as read
@@ -88,6 +88,7 @@ and name fields. (See the example below for supported options).
     "articlePreviewWindowSizeRatio": 5,
     "articleWindowSizeRatio": 2,
     "previewWindowSizeRatio": 1,
+    "feedNameMaxWidth": 20,
     "daysToKeepDeletedArticlesInDB": 1,
     "daysToKeepReadArticlesInDB": 1,
     "skipArticlesOlderThanDays": 10,
@@ -109,6 +110,8 @@ and name fields. (See the example below for supported options).
     "keyMarkAllReadFeed": "Ctrl+F",
     "keyMarkAllUnreadFeed": "Ctrl+G",
     "keyTogglePreview": "q",
+    "keyToggleFeeds": "f",
+    "keyCycleTheme": "T",
     "keySelectFeedWindow": "1",
     "keySelectArticleWindow": "2",
     "keySelectPreviewWindow": "3",
@@ -117,6 +120,7 @@ and name fields. (See the example below for supported options).
     "keyQuit": "Esc",
     "keyUndoLastRead": "u",
     "keySearchPromt": "/",
+    "collapseFeeds": false,
     "notifications": true,
     "customCommands": [
         {
@@ -131,6 +135,13 @@ and name fields. (See the example below for supported options).
 }
 ```
 
+### New Configuration Options (v0.5+)
+
+- **`feedNameMaxWidth`** (int, default: 20): Maximum width for feed names in the articles view. Reduce this to give more space to article titles.
+- **`keyToggleFeeds`** (string, default: "f"): Toggle the visibility of the feeds panel for more reading space.
+- **`keyCycleTheme`** (string, default: "T"): Cycle through all available themes at runtime without restarting.
+- **`collapseFeeds`** (bool, default: false): Start with the feeds panel hidden.
+
 ## Custom Commands
 Custom commands can be added such as the example in the example configuration above.
 
@@ -144,12 +155,23 @@ Available variables are:
 * `ARTICLE.Title` - Title of the article
 
 ## Themes
-Themes are highly configurable and 3 example themes are included. You can start gorss with a specific theme as argument.
+Gorss includes 8 beautiful built-in themes that are embedded in the binary. You can cycle through themes at runtime by pressing `T` (or your configured `keyCycleTheme`), or start with a specific theme as an argument.
+
+### Available Built-in Themes
+- **default** - Vibrant teal and pink palette
+- **irssi** - Classic IRC client inspired theme
+- **night** - Dark theme for nighttime reading
+- **dracula** - Popular Dracula color scheme
+- **nord** - Arctic, north-bluish color palette
+- **gruvbox** - Retro groove warm colors
+- **monokai** - Sublime Text inspired theme
+- **tokyo-night** - Modern dark theme with purple accents
+
 ```
-./gorss -theme my.theme
+./gorss -theme dracula.theme
 ```
 
-Themes are configured with JSON, default example below:
+All themes are embedded in the binary, but you can still create custom theme files. Themes are configured with JSON, default example below:
 ```
 {
     "feedNames": [

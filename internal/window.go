@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"sort"
 	"strconv"
@@ -10,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/k3a/html2text"
 	"github.com/rivo/tview"
-	"jaytaylor.com/html2text"
 )
 
 // Window holds all information regarding the Window layout and functionality
@@ -31,6 +30,7 @@ type Window struct {
 	layout      *tview.Flex
 	showPreview bool
 	showHelp    bool
+	showFeeds   bool
 	nArticles   int
 	nFeeds      int
 	askQuit     bool
@@ -50,6 +50,7 @@ func (w *Window) Init(inputFunc func(*tcell.EventKey) *tcell.EventKey, c *Contro
 
 	w.showPreview = true
 	w.showHelp = false
+	w.showFeeds = !c.conf.CollapseFeeds
 
 	// Feeds window
 	w.feeds = tview.NewTable()
@@ -167,7 +168,9 @@ func (w *Window) SetupWindow() {
 	w.flexFeeds.AddItem(w.feeds, 0, 1, false)
 
 	w.flexGlobal = tview.NewFlex().SetDirection(tview.FlexColumn)
-	w.flexGlobal.AddItem(w.flexFeeds, 0, w.c.conf.FeedWindowSizeRatio, false)
+	if w.showFeeds {
+		w.flexGlobal.AddItem(w.flexFeeds, 0, w.c.conf.FeedWindowSizeRatio, false)
+	}
 	w.flexGlobal.AddItem(w.flexMiddle, 0, w.c.conf.ArticlePreviewWindowSizeRatio, false)
 
 	w.flexStatus = tview.NewFlex().SetDirection(tview.FlexRow)
@@ -209,6 +212,41 @@ func (w *Window) TogglePreview() {
 		w.flexMiddle = w.flexMiddle.RemoveItem(w.preview)
 		w.showPreview = false
 	}
+}
+
+// ToggleFeeds shows/hides the feeds window
+func (w *Window) ToggleFeeds() {
+	if !w.showFeeds {
+		w.flexGlobal = w.flexGlobal.RemoveItem(w.flexMiddle)
+		w.flexGlobal = w.flexGlobal.AddItem(w.flexFeeds, 0, w.c.conf.FeedWindowSizeRatio, false)
+		w.flexGlobal = w.flexGlobal.AddItem(w.flexMiddle, 0, w.c.conf.ArticlePreviewWindowSizeRatio, false)
+		w.showFeeds = true
+	} else {
+		w.flexGlobal = w.flexGlobal.RemoveItem(w.flexFeeds)
+		w.showFeeds = false
+		w.app.SetFocus(w.articles)
+	}
+}
+
+// UpdateTheme updates all window colors with a new theme
+func (w *Window) UpdateTheme(theme *Theme) {
+	w.c.theme = *theme
+
+	w.feeds.SetBorderColor(tcell.GetColor(theme.FeedBorder))
+	w.feeds.SetTitle(fmt.Sprintf("%s Feeds", theme.FeedIcon)).SetTitleColor(tcell.GetColor(theme.FeedBorderTitle))
+
+	w.articles.SetBorderColor(tcell.GetColor(theme.ArticleBorder))
+	w.articles.SetTitle(fmt.Sprintf("%s Articles", theme.ArticleIcon)).SetTitleColor(tcell.GetColor(theme.ArticleBorderTitle))
+
+	w.preview.SetBorderColor(tcell.GetColor(theme.PreviewBorder))
+	w.preview.SetTitle(fmt.Sprintf("%s Preview", theme.PreviewIcon)).SetTitleColor(tcell.GetColor(theme.PreviewBorderTitle))
+
+	w.status.SetBackgroundColor(tcell.GetColor(theme.StatusBackground))
+
+	w.help.SetBorderColor(tcell.GetColor(theme.ArticleBorder))
+	w.help.SetTitleColor(tcell.GetColor(theme.ArticleBorderTitle))
+
+	go w.app.Draw()
 }
 
 // UpdateStatusTicker calls StatusUpdate periodically
@@ -583,12 +621,18 @@ func (w *Window) SwitchFocus() {
 		w.app.SetFocus(w.articles)
 	} else if p == w.articles {
 		if w.c.conf.SkipPreviewInTab {
-			w.app.SetFocus(w.feeds)
+			if w.showFeeds {
+				w.app.SetFocus(w.feeds)
+			}
 		} else {
 			w.app.SetFocus(w.preview)
 		}
 	} else if p == w.preview {
-		w.app.SetFocus(w.feeds)
+		if w.showFeeds {
+			w.app.SetFocus(w.feeds)
+		} else {
+			w.app.SetFocus(w.articles)
+		}
 	}
 }
 
@@ -634,7 +678,11 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 	fc := tview.NewTableCell(fmt.Sprintf("[%s]%s", color, a.feed))
 	fc.SetTextColor(tcell.GetColor(color))
 	fc.SetAlign(tview.AlignLeft)
-	fc.SetMaxWidth(20)
+	feedNameMaxWidth := w.c.conf.FeedNameMaxWidth
+	if feedNameMaxWidth == 0 {
+		feedNameMaxWidth = 20
+	}
+	fc.SetMaxWidth(feedNameMaxWidth)
 	w.articles.SetCell(w.nArticles, 1, fc)
 
 	tc := tview.NewTableCell("")
@@ -716,11 +764,7 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 
 // AddPreview shows an article in the preview window
 func (w *Window) AddPreview(a *Article) {
-	parsed, err := html2text.FromString(a.content, html2text.Options{PrettyTables: true})
-	if err != nil {
-		log.Printf("Failed to parse html to text, rendering original.")
-		parsed = a.content
-	}
+	parsed := html2text.HTML2Text(a.content)
 
 	w.preview.Clear()
 

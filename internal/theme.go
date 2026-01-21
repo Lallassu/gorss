@@ -4,6 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/Lallassu/gorss"
 )
 
 // Theme holds all colors for the theme
@@ -37,20 +42,64 @@ type Theme struct {
 }
 
 // LoadTheme loads a theme file and parses it.
+// First tries to load from file system, then falls back to embedded themes.
 func LoadTheme(file string) Theme {
 	var theme Theme
-	themeFile, err := os.Open(file)
-	defer themeFile.Close()
 
-	if err != nil {
-		log.Fatal("Failed to parse theme file:", err)
+	// Try to load from file system first
+	themeFile, err := os.Open(file)
+	if err == nil {
+		defer themeFile.Close()
+		jsonParser := json.NewDecoder(themeFile)
+		err = jsonParser.Decode(&theme)
+		if err != nil {
+			log.Fatal("Failed to parse theme file:", err)
+		}
+		return theme
 	}
 
-	jsonParser := json.NewDecoder(themeFile)
-	err = jsonParser.Decode(&theme)
+	// Fall back to embedded themes
+	themeName := filepath.Base(file)
+	return LoadEmbeddedTheme(themeName)
+}
+
+// LoadEmbeddedTheme loads a theme from embedded filesystem
+func LoadEmbeddedTheme(themeName string) Theme {
+	var theme Theme
+
+	if !strings.HasSuffix(themeName, ".theme") {
+		themeName += ".theme"
+	}
+
+	data, err := gorss.EmbeddedThemes.ReadFile("themes/" + themeName)
 	if err != nil {
-		log.Fatal("Failed to parse theme file:", err)
+		log.Fatalf("Failed to load embedded theme %s: %v", themeName, err)
+	}
+
+	err = json.Unmarshal(data, &theme)
+	if err != nil {
+		log.Fatalf("Failed to parse embedded theme %s: %v", themeName, err)
 	}
 
 	return theme
+}
+
+// GetAvailableThemes returns a sorted list of available theme names (without .theme extension)
+func GetAvailableThemes() []string {
+	entries, err := gorss.EmbeddedThemes.ReadDir("themes")
+	if err != nil {
+		log.Printf("Failed to read embedded themes directory: %v", err)
+		return []string{"default"}
+	}
+
+	var themes []string
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".theme") {
+			themeName := strings.TrimSuffix(entry.Name(), ".theme")
+			themes = append(themes, themeName)
+		}
+	}
+
+	sort.Strings(themes)
+	return themes
 }
