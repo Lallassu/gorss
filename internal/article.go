@@ -12,6 +12,7 @@ type Article struct {
 	feedDisplay string
 	title       string
 	content     string
+	preview     string
 	link        string
 	read        bool
 	deleted     bool

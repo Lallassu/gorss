@@ -764,7 +764,15 @@ func (w *Window) AddToArticles(a *Article, markedWeb bool) {
 
 // AddPreview shows an article in the preview window
 func (w *Window) AddPreview(a *Article) {
-	parsed := html2text.HTML2Text(a.content)
+	if a == nil {
+		return
+	}
+
+	if a.preview == "" {
+		a.preview = html2text.HTML2Text(a.content)
+	}
+
+	parsed := a.preview
 
 	w.preview.Clear()
 
