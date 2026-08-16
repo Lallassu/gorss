@@ -16,7 +16,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gen2brain/beeep"
-	"github.com/rivo/tview"
 )
 
 // Controller handles the logic and keep everything together
@@ -434,14 +433,8 @@ func (c *Controller) GetArticleForSelection() *Article {
 		return nil
 	}
 
-	var cell *tview.TableCell
-
-	if c.activeFeed == "unread" {
-		cell = c.win.articles.GetCell(1, 2)
-	} else {
-		r, _ := c.win.articles.GetSelection()
-		cell = c.win.articles.GetCell(r, 2)
-	}
+	r, _ := c.win.articles.GetSelection()
+	cell := c.win.articles.GetCell(r, 2)
 	if cell == nil {
 		return nil
 	}
@@ -473,26 +466,16 @@ func (c *Controller) SelectFeed(row, col int) {
 
 // SelectArticle is used a hook for article selection
 func (c *Controller) SelectArticle(row, col int) {
-	if c.activeFeed == "unread" && row == 0 {
-		if c.prevArticle != nil {
-			if err := c.db.MarkRead(c.prevArticle); err != nil {
-				log.Println(err)
-			}
-			c.prevArticle.read = true
-			c.ShowArticles(c.activeFeed)
-			c.ShowFeeds()
-			c.win.ClearPreview()
-		}
+	if row <= 0 {
 		return
 	}
+
 	a := c.GetArticleForSelection()
 	if a == nil {
 		return
 	}
 
-	c.win.preview.Clear()
-
-	if c.activeFeed != "unread" {
+	if !a.read {
 		if err := c.db.MarkRead(a); err != nil {
 			log.Println(err)
 		}
@@ -504,12 +487,8 @@ func (c *Controller) SelectArticle(row, col int) {
 
 	c.win.AddPreview(a)
 
-	if c.activeFeed == "unread" {
-		c.ShowArticles(c.activeFeed)
-	} else {
-		markedWeb := slices.Contains(c.linksToOpen, a.link)
-		c.win.MarkArticleRowAsReadInPlace(row, markedWeb)
-	}
+	markedWeb := slices.Contains(c.linksToOpen, a.link)
+	c.win.MarkArticleRowAsReadInPlace(row, markedWeb)
 
 	c.ShowFeeds()
 }
