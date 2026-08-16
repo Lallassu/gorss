@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -471,7 +472,9 @@ func (c *Controller) SelectFeed(row, col int) {
 func (c *Controller) SelectArticle(row, col int) {
 	if c.activeFeed == "unread" && row == 0 {
 		if c.prevArticle != nil {
-			c.db.MarkRead(c.prevArticle)
+			if err := c.db.MarkRead(c.prevArticle); err != nil {
+				log.Println(err)
+			}
 			c.prevArticle.read = true
 			c.ShowArticles(c.activeFeed)
 			c.ShowFeeds()
@@ -487,15 +490,24 @@ func (c *Controller) SelectArticle(row, col int) {
 	c.win.preview.Clear()
 
 	if c.activeFeed != "unread" {
-		c.db.MarkRead(a)
+		if err := c.db.MarkRead(a); err != nil {
+			log.Println(err)
+		}
 		a.read = true
 	}
+
 	c.undoArticle = c.prevArticle
 	c.prevArticle = a
 
 	c.win.AddPreview(a)
 
-	c.ShowArticles(c.activeFeed)
+	if c.activeFeed == "unread" {
+		c.ShowArticles(c.activeFeed)
+	} else {
+		markedWeb := slices.Contains(c.linksToOpen, a.link)
+		c.win.MarkArticleRowAsReadInPlace(row, markedWeb)
+	}
+
 	c.ShowFeeds()
 }
 

@@ -806,3 +806,27 @@ func GetTime(ts string) string {
 
 	return "-"
 }
+
+// MarkArticleRowAsReadInPlace updates the table cell styles of a specific row in-place
+// without rebuilding the entire table.
+func (w *Window) MarkArticleRowAsReadInPlace(row int, markedWeb bool) {
+	if row <= 0 || row > w.articles.GetRowCount() {
+		return
+	}
+
+	c0 := w.articles.GetCell(row, 0)
+	if c0 != nil {
+		if markedWeb {
+			c0.SetText(w.c.theme.LinkMarker)
+		} else {
+			c0.SetText("")
+		}
+	}
+
+	for col := 1; col <= 3; col++ {
+		cell := w.articles.GetCell(row, col)
+		if cell != nil {
+			cell.SetAttributes(cell.Attributes &^ tcell.AttrBold)
+		}
+	}
+}
