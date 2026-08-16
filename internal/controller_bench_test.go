@@ -96,6 +96,9 @@ func setupTestController(b *testing.B, articleCount int) (*Controller, func()) {
 	ctrl.ShowArticles("allarticles")
 
 	cleanup := func() {
+		if ctrl.db != nil {
+			ctrl.db.Close()
+		}
 		os.RemoveAll(tempDir)
 	}
 	return ctrl, cleanup

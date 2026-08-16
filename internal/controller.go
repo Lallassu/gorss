@@ -152,6 +152,9 @@ func (c *Controller) UpdateLoop() {
 // Quit ends the application
 func (c *Controller) Quit() {
 	c.win.app.Stop()
+	if c.db != nil {
+		_ = c.db.Close()
+	}
 	os.Exit(0)
 }
 

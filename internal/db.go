@@ -12,8 +12,10 @@ import (
 
 // DB holds the database information
 type DB struct {
-	db *sql.DB
-	c  *Controller
+	db           *sql.DB
+	c            *Controller
+	markReadChan chan int
+	workerDone   chan struct{}
 }
 
 // Init setups the database and creates tables if needed.
@@ -27,7 +29,7 @@ func (d *DB) Init(c *Controller, dbFile string) error {
 	//defer d.db.Close()
 
 	_, err = d.db.Exec(`
-         create table if not exists articles(
+    create table if not exists articles(
 			id integer not null primary key,
 			feed text,
 			title text,
@@ -42,6 +44,11 @@ func (d *DB) Init(c *Controller, dbFile string) error {
 		log.Println(err)
 		return err
 	}
+
+	d.markReadChan = make(chan int, 200)
+	d.workerDone = make(chan struct{})
+	go d.startWriteWorker()
+
 	return nil
 }
 
@@ -183,14 +190,13 @@ func (d *DB) MarkRead(a *Article) error {
 	if a == nil {
 		return nil
 	}
-	st, err := d.db.Prepare("update articles set read = true where id = ?")
-	if err != nil {
-		log.Println(err)
-	}
-	defer st.Close()
-
-	if _, err := st.Exec(a.id); err != nil {
-		log.Println(err)
+	// Non-blocking send of a.id to channel to avoid blocking the UI
+	if d.markReadChan != nil {
+		select {
+		case d.markReadChan <- a.id:
+		default:
+			// Skip if channel is full to prevent UI blocking
+		}
 	}
 	return nil
 }
@@ -255,4 +261,63 @@ func (d *DB) MarkAllUnread(feed string) {
 			log.Println(err)
 		}
 	}
+}
+
+// startWriteWorker runs in the background and batches article read updates to minimize disk I/O.
+func (d *DB) startWriteWorker() {
+	defer close(d.workerDone)
+
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer ticker.Stop()
+
+	pendingIDs := make(map[int]struct{})
+
+	flush := func() {
+		if len(pendingIDs) == 0 {
+			return
+		}
+
+		placeholders := make([]string, 0, len(pendingIDs))
+		args := make([]any, 0, len(pendingIDs))
+		for id := range pendingIDs {
+			placeholders = append(placeholders, "?")
+			args = append(args, id)
+		}
+
+		query := fmt.Sprintf("UPDATE articles SET read = true WHERE id IN (%s)", strings.Join(placeholders, ","))
+		if _, err := d.db.Exec(query, args...); err != nil {
+			log.Printf("failed to batch update read status: %v", err)
+		}
+
+		pendingIDs = make(map[int]struct{})
+	}
+
+	for {
+		select {
+		case id, ok := <-d.markReadChan:
+			if !ok {
+				flush()
+				return
+			}
+			pendingIDs[id] = struct{}{}
+			if len(pendingIDs) >= 50 {
+				flush()
+			}
+		case <-ticker.C:
+			flush()
+		}
+	}
+}
+
+// Close gracefully shuts down the background write worker and closes the database.
+func (d *DB) Close() error {
+	if d.markReadChan != nil {
+		close(d.markReadChan)
+		<-d.workerDone
+		d.markReadChan = nil
+	}
+	if d.db != nil {
+		return d.db.Close()
+	}
+	return nil
 }

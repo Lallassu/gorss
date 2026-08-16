@@ -8,25 +8,25 @@ Profiling and benchmarking on an AMD Ryzen 5 system demonstrates that each singl
 
 ---
 
-## 2. Benchmark Measurements (Before vs. After)
+## 2. Benchmark Measurements (Milestone Progression)
 
 Measured using `go test -bench=BenchmarkSelectArticle -benchmem` on **AMD Ryzen 5 PRO 6650U (Go 1.25)**:
 
-| Archive Size       | Metric          | Before (Full Rebuild) | After (In-Place Mutation) | Improvement Factor              |
-| :----------------- | :-------------- | :-------------------- | :------------------------ | :------------------------------ |
-| **100 Articles**   | **Latency**     | `540.7 μs/op`         | **`94.0 μs/op`**          | **$5.7\times$ faster**          |
-|                    | **Heap Memory** | `440.6 KB/op`         | **`15.9 KB/op`**          | **$-96.4\%$ memory allocated**  |
-|                    | **Allocations** | `5,460 allocs/op`     | **`166 allocs/op`**       | **$-96.9\%$ allocations**       |
-| **500 Articles**   | **Latency**     | `2,258.5 μs/op`       | **`110.5 μs/op`**         | **$20.4\times$ faster**         |
-|                    | **Heap Memory** | `1,838.3 KB/op`       | **`16.0 KB/op`**          | **$-99.1\%$ memory allocated**  |
-|                    | **Allocations** | `24,009 allocs/op`    | **`170 allocs/op`**       | **$-99.3\%$ allocations**       |
-| **1,000 Articles** | **Latency**     | `4,074.3 μs/op`       | **`134.7 μs/op`**         | **$30.2\times$ faster**         |
-|                    | **Heap Memory** | `3,538.7 KB/op`       | **`16.0 KB/op`**          | **$-99.55\%$ memory allocated** |
-|                    | **Allocations** | `47,197 allocs/op`    | **`172 allocs/op`**       | **$-99.63\%$ allocations**      |
+| Archive Size       | Metric          | Baseline (Original) | Milestone 1 (In-Place Mutation) | Milestone 2 (Async Write Queue) | Total Improvement       |
+| :----------------- | :-------------- | :------------------ | :------------------------------ | :------------------------------ | :---------------------- |
+| **100 Articles**   | **Latency**     | `540.7 μs/op`       | `94.0 μs/op`                    | **`23.3 μs/op`**                | **$23.2\times$ faster** |
+|                    | **Heap Memory** | `440.6 KB/op`       | `15.9 KB/op`                    | **`15.2 KB/op`**                | **$-96.5\%$ memory**    |
+|                    | **Allocations** | `5,460 allocs/op`   | `166 allocs/op`                 | **`152 allocs/op`**             | **$-97.2\%$ allocs**    |
+| **500 Articles**   | **Latency**     | `2,258.5 μs/op`     | `110.5 μs/op`                   | **`31.6 μs/op`**                | **$71.5\times$ faster** |
+|                    | **Heap Memory** | `1,838.3 KB/op`     | `16.0 KB/op`                    | **`15.4 KB/op`**                | **$-99.2\%$ memory**    |
+|                    | **Allocations** | `24,009 allocs/op`  | `170 allocs/op`                 | **`156 allocs/op`**             | **$-99.35\%$ allocs**   |
+| **1,000 Articles** | **Latency**     | `4,074.3 μs/op`     | `134.7 μs/op`                   | **`49.1 μs/op`**                | **$83.1\times$ faster** |
+|                    | **Heap Memory** | `3,538.7 KB/op`     | `16.0 KB/op`                    | **`15.4 KB/op`**                | **$-99.56\%$ memory**   |
+|                    | **Allocations** | `47,197 allocs/op`  | `172 allocs/op`                 | **`158 allocs/op`**             | **$-99.66\%$ allocs**   |
 
 ### Key Takeaway
 
-At a standard keyboard repeat rate of 30 keypresses/sec in a 1,000-article archive, memory thrashing is reduced from **$106.2\text{ MB/sec}$** down to **$0.48\text{ MB/sec}$**, completely eliminating Go runtime Garbage Collector stalls (`runtime.gcDrain`).
+Per-keypress latency for a 1,000-article feed dropped from **$4.07\text{ ms}$** down to **$0.049\text{ ms}$ ($49\text{ μs}$)**. Holding navigation keys no longer causes GC thrashing or SQLite disk lockups.
 
 ---
 
@@ -49,13 +49,14 @@ At a standard keyboard repeat rate of 30 keypresses/sec in a 1,000-article archi
    - Directly mutates existing `TableCell` pointers in-place using `SetText()` and `SetAttributes(cell.Attributes &^ tcell.AttrBold)`.
    - Full table rebuilds (`ShowArticles`) are strictly reserved for feed switching, search query updates, and RSS network refreshes.
 2. **Asynchronous Write-Behind Queue (`internal/db.go`)**:
-   - Dispatches article IDs to a non-blocking buffered channel.
-   - A background worker debounces writes and executes batched SQLite transactions:
+   - Dispatches article IDs to a non-blocking buffered channel (`markReadChan chan int`).
+   - A background worker debounces writes with a 200ms window / 50-item threshold and executes batched SQLite transactions:
 
      ```sql
      UPDATE articles SET read = true WHERE id IN (?, ?, ?, ...);
      ```
 
+   - Added `DB.Close()` to ensure graceful flushing of in-flight updates on shutdown.
 3. **Preview Caching**:
    - Caches parsed plain text to avoid redundant regex passes on revisited articles.
 
